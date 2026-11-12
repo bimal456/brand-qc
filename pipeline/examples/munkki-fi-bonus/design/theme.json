@@ -1,0 +1,11 @@
+{
+  "brand": "Munkki Casino",
+  "toc": true,
+  "tokens": {"logo": "<img src=\"/assets/img/logo.webp\" alt=\"Munkki Casino\" width=\"180\" height=\"39\">"},
+  "labels": {
+    "fi": {"home": "Etusivu", "login": "Kirjaudu", "register": "Rekisteröidy", "deposit": "Talleta", "cta_play": "Katso voimassa olevat ehdot", "card_cta": "Katso tästä",
+           "menu": "Valikko", "toc_title": "Sisällysluettelo", "pages_title": "Tietoa", "rg_title": "Vastuullinen pelaaminen",
+           "promos_title": "Kampanjat", "providers_title": "Pelintarjoajat", "cta_title": "Tervetuliaistarjous odottaa", "cta_btn": "Pelaa nyt",
+           "legal": "Vain täysi-ikäisille. Pelaa vastuullisesti."}
+  }
+}

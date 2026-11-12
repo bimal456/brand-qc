@@ -16,7 +16,8 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
    - layout: header and menu style (top nav, left sidebar, bottom bar), the home page block order (hero, game rows and their names, promotions, providers, content, FAQ), the game card style
    - screenshots of the lobby and each game row (computer tool `screenshot` with `save_to_disk`), to crop game thumbnails and section images with Pillow
 2. **If the brand site is geo-blocked or unreachable** (casino sites often block visitors outside their market): use `site.json` `brand_assets` (colours, logo, screenshots collected in Step 1). If those are missing, stop and ask the user for the logo, 2-3 brand colours and lobby/promotion screenshots (they can attach them). Never invent a "brand" palette and present it as the real one; if the user says to go ahead without assets, say clearly in the hand-off that the look is a placeholder.
-3. Open the reference site from site.json (or the top competitor for the main keyword). Note layout only: header height, content width, how sections and tables are shown. Take ideas, never copy markup, text or images.
+3. Practical notes: Chrome screenshots are downscaled (a 1920px viewport comes back about 1568px wide), so use the zoom action for crisp thumbnail and logo crops. Brand display fonts that are not on Google Fonts need a fallback: use a heavy weight (800) with `font-synthesis:none` so headings keep the brand's weight.
+4. Open the reference site from site.json (or the top competitor for the main keyword). Note layout only: header height, content width, how sections and tables are shown. Take ideas, never copy markup, text or images.
 
 ## 2. Build the design
 1. If `<project>/design/` does not exist yet, copy `pipeline/design-starter/` there. Then change it to the brand:

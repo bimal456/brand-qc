@@ -60,7 +60,7 @@ JS = r"""
   const foot = document.querySelector('footer');
   r.foot18 = !!foot && foot.textContent.includes('18+');
   r.footExt = foot ? [...foot.querySelectorAll('a[href^="http"]')].length : 0;
-  r.internal = [...new Set([...document.querySelectorAll('a[href^="/"]')].map(a => a.getAttribute('href').split('?')[0].replace(/\/$/,'') || '/'))];
+  r.internal = [...new Set([...document.querySelectorAll('main a[href^="/"]')].map(a => a.getAttribute('href').split('?')[0].replace(/\/$/,'') || '/'))];
   r.imgs = [...document.querySelectorAll('img')].map(i => ({src: i.getAttribute('src')||'', alt: i.getAttribute('alt'), w: i.getAttribute('width'), h: i.getAttribute('height')}));
   r.playNoNofollow = [...document.querySelectorAll('a')].filter(a => (a.getAttribute('href')||'').replace(/\/$/,'') === PLAY && !(a.getAttribute('rel')||'').includes('nofollow')).length;
   return r;
@@ -102,6 +102,8 @@ def main():
                 pg.on("requestfailed", lambda r, errs=errs, ext=ext: (ext if not r.url.startswith(base) else errs).append("failed " + r.url))
                 pg.on("response", lambda r, errs=errs: errs.append(f"{r.status} {r.url}") if r.status >= 400 else None)
                 pg.goto(base + url, wait_until="networkidle")
+                pg.evaluate("document.querySelectorAll('img[loading=lazy]').forEach(i => i.loading = 'eager')")
+                pg.wait_for_load_state("networkidle")
                 r = pg.evaluate(JS.replace("PLAY", json.dumps(play)))
                 tag = f"{url} @{width}"
                 if r["overflow"] > 1:

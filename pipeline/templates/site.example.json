@@ -21,6 +21,7 @@
     "allow_noindex": false,
     "external_links": "geo responsible-gambling resources only",
     "other_brands_named": false,
+    "header_page_links": true,
     "extra_rules": []
   },
   "pages": [

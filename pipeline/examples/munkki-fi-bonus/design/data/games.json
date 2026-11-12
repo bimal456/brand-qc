@@ -1,0 +1,19 @@
+{
+  "popular": {"title": {"fi": "Suositut pelit"}, "items": [
+    {"name": "Sweet Bonanza", "provider": "Pragmatic Play", "img": "/assets/img/g/sweet-bonanza.webp", "w": 240, "h": 320},
+    {"name": "Gates of Olympus", "provider": "Pragmatic Play", "img": "/assets/img/g/gates-of-olympus.webp", "w": 240, "h": 320},
+    {"name": "Book of Dead", "provider": "Play'n GO", "img": "/assets/img/g/book-of-dead.webp", "w": 240, "h": 320},
+    {"name": "Big Bass Bonanza", "provider": "Pragmatic Play", "img": "/assets/img/g/big-bass-bonanza.webp", "w": 240, "h": 320},
+    {"name": "Reactoonz", "provider": "Play'n GO", "img": "/assets/img/g/reactoonz.webp", "w": 240, "h": 320},
+    {"name": "Razor Shark", "provider": "Push Gaming", "img": "/assets/img/g/razor-shark.webp", "w": 240, "h": 320},
+    {"name": "Starburst", "provider": "NetEnt", "img": "/assets/img/g/starburst.webp", "w": 240, "h": 320}
+  ]},
+  "new": {"title": {"fi": "Uudet pelit"}, "items": [
+    {"name": "Sugar Rush 1000", "provider": "Pragmatic Play", "img": "/assets/img/g/sugar-rush-1000.webp", "w": 240, "h": 320},
+    {"name": "Gates of Olympus 1000", "provider": "Pragmatic Play", "img": "/assets/img/g/gates-of-olympus-1000.webp", "w": 240, "h": 320},
+    {"name": "Sweet Bonanza 1000", "provider": "Pragmatic Play", "img": "/assets/img/g/sweet-bonanza-1000.webp", "w": 240, "h": 320},
+    {"name": "Starlight Princess 1000", "provider": "Pragmatic Play", "img": "/assets/img/g/starlight-princess-1000.webp", "w": 240, "h": 320},
+    {"name": "Le Bandit", "provider": "Hacksaw Gaming", "img": "/assets/img/g/le-bandit.webp", "w": 240, "h": 320},
+    {"name": "Fire in the Hole 3", "provider": "Nolimit City", "img": "/assets/img/g/fire-in-the-hole-3.webp", "w": 240, "h": 320}
+  ]}
+}

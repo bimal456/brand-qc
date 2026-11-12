@@ -6,19 +6,20 @@
 <title>{{title}}</title>
 <meta name="description" content="{{description}}">
 <link rel="canonical" href="{{canonical}}">
-<meta name="theme-color" content="#2a1a14">
 <link rel="stylesheet" href="/assets/css/site.css">
 {{head_extra}}
 </head>
 <body class="page-{{page_type}}">
+<div class="shell">
+{{sidebar}}
+<div class="col">
 {{header}}
-<main class="wrap">
-<article class="content">
-<h1>{{h1}}</h1>
-{{body}}
-</article>
+<main class="main">
+{{blocks}}
 </main>
 {{footer}}
+</div>
+</div>
 <script src="/assets/js/site.js" defer></script>
 </body>
 </html>

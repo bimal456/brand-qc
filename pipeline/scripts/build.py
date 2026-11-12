@@ -30,7 +30,9 @@ The hero block shows the page H1 and the content's intro (text owned by the cont
 The content block shows the rest of the markdown, with a table of contents of the H2s when
 theme.json "toc" is true (jump buttons, no "#" links).
 Fails (exit 1) when a page still has [VERIFY] placeholders, unless --draft.
-Template tokens: {{name}}. Unknown tokens render empty.
+Template tokens: {{name}}. Unknown tokens render empty. Every key under theme.json "labels"
+(and "tokens") becomes a token, so designers can add their own (e.g. {{deposit}}).
+Links to the current page in header, sidebar and footer get aria-current="page" (style it in CSS).
 """
 import html
 import json
@@ -252,9 +254,9 @@ def main():
                                         for sid, t2 in toc) if theme.get("toc") and toc else "")
                 blocks.append(fill(t, c))
             ctx["blocks"] = "\n".join(blocks)
-            ctx["header"] = fill(tpl("header"), ctx)
-            ctx["sidebar"] = fill(tpl("sidebar"), ctx)
-            ctx["footer"] = fill(tpl("footer"), ctx)
+            here = f'href="{url_for(g["prefix"], meta.get("slug", "/"))}"'
+            for part in ("header", "sidebar", "footer"):
+                ctx[part] = fill(tpl(part), ctx).replace(here + ">", here + ' aria-current="page">')
             head_extra_p = os.path.join(proj, "seo", "head", geo, f"{name}.html")
             ctx.update({
                 "title": E(meta.get("title", "")), "description": E(meta.get("description", ""), quote=True),

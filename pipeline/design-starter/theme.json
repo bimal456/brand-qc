@@ -5,9 +5,9 @@
   "labels": {
     "fi": {"home": "Etusivu", "login": "Kirjaudu", "register": "Rekisteröidy", "cta_play": "Pelaa nyt", "card_cta": "Katso tästä",
            "menu": "Valikko", "toc_title": "Sisällysluettelo", "pages_title": "Tietoa", "rg_title": "Vastuullinen pelaaminen",
-           "promos_title": "Kampanjat", "providers_title": "Pelintarjoajat", "cta_title": "Valmiina pelaamaan?", "legal": "18+ | Pelaa vastuullisesti."},
+           "promos_title": "Kampanjat", "providers_title": "Pelintarjoajat", "cta_title": "Valmiina pelaamaan?", "legal": "Pelaa vastuullisesti."},
     "en": {"home": "Home", "login": "Login", "register": "Register", "cta_play": "Play now", "card_cta": "Check here",
            "menu": "Menu", "toc_title": "Contents", "pages_title": "Info", "rg_title": "Play responsibly",
-           "promos_title": "Promotions", "providers_title": "Providers", "cta_title": "Ready to play?", "legal": "18+ only. Play responsibly."}
+           "promos_title": "Promotions", "providers_title": "Providers", "cta_title": "Ready to play?", "legal": "Play responsibly."}
   }
 }

@@ -1,7 +1,0 @@
-{
-  "brand": "Munkki Casino",
-  "tokens": {"logo_text": "Munkki", "logo_sub": "Casino"},
-  "labels": {
-    "fi": {"login": "Kirjaudu", "register": "Rekisteröidy", "pages_title": "Tietoa ja säännöt", "rg_title": "Apua pelaamiseen", "legal": "Pelaaminen vain täysi-ikäisille. Pelaa vastuullisesti ja aseta rajat ennen ensimmäistä talletusta. Munkki Casino, White Hat Gaming Limited, Malta."}
-  }
-}
