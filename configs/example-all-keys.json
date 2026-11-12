@@ -1,0 +1,6 @@
+{
+  "word_count": {"home": 5000, "mandatory": 1000, "other": 3000},
+  "allowed_external_domains": ["joueurs-info-service.fr", "anj.fr"],
+  "forbidden_names": ["KAP Digital", "KAP ", "OtherCasinoName"],
+  "banned_phrases": ["in conclusion", "it's important to note", "navigating the", "dive into", "the ultimate guide"]
+}
