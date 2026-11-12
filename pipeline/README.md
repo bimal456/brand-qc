@@ -9,7 +9,7 @@ Agents never rely on each other's memory: every step reads files from the projec
 | 2 SERP architect | `serp-architect` | `site.json` | `brief/<geo>/<page>/serp.json`, `consensus.md`, `outline.md`, `brief/APPROVAL.md` | page structure |
 | 3 Content | `content-writer`, then `humanize-pass` | `site.json`, approved outlines | `content/<geo>/<page>.md` | all wording |
 | 4 Design | `site-designer` | `site.json`, `content/` | `design/` (theme, templates, css, img), `build/` via `build.py` | layout, visuals |
-| 5 SEO | (next) | `build/`, `content/` | technical files, `seo/requests.md` | meta, schema, hreflang, links |
+| 5 SEO | `seo-optimizer` (`seo_build.py`, `seo_check.py`) | `site.json`, `content/` | `seo/head/`, `seo/files/`, `seo/requests.md` | head tags, schema, hreflang, sitemap, robots, redirects, headers |
 | 6 QC | `brand-qc` | `build/`, `qc/config.json` | `qc/report-*.md` | nothing (reports only) |
 
 ## Ownership rule

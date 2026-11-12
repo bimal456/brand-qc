@@ -1,0 +1,4 @@
+/play  https://example.invalid/set-affiliate-link  302
+/play/  https://example.invalid/set-affiliate-link  302
+/index.html  /  301
+/:page.html  /:page  301

@@ -22,6 +22,7 @@ Each page is written by its own sub-agent with only: site.json, that page's outl
 - Write natively in the geo's language. Never translate from English.
 - **Facts:** only claims from site.json `facts` that have a source. When the outline and site.json disagree on whether a fact is verified, site.json wins. A number, licence, operator name or bonus term that is not verified is left out or written as a placeholder `[VERIFY: ...]`, never guessed. The placeholder replaces only the value inside a normal sentence. Never write sentences about the site's own process ("figures are confirmed before publishing", "search results show"): they read as dev notes on a live page.
 - **Voice (site.json `voice`):** brand speaks as "we / our / [Brand]" for brand sites. If `address_reader_as_you` is false, never address the reader: no "you", and in Finnish no 2nd-person verbs (voit, saat, haluat, talletat) or imperatives; use passive or impersonal forms. Never "official site", "we are not the operator", "information only". This also applies to CTA and meta examples copied from the outline: rewrite imperatives (katso, tutustu, lue) into impersonal forms.
+- **Brand name:** use site.json `brand` as the main spelling. Aliases (for example "Munkki Kasino") only where the page keyword needs them.
 - **No em dashes.** Hyphens are fine.
 - **Intro:** follows the outline's intro brief. Plain text, no boxes or lists in the opening.
 - **Style:** answer the section's question in the first one or two sentences, then detail. Vary sentence length. Concrete numbers and examples over adjectives. Lists and tables only where the content is comparable. No filler sections, no "In conclusion".
@@ -35,4 +36,4 @@ Run `python3 pipeline/scripts/content_check.py content/<geo>/<page>.md --outline
 Summary per page: words, H2 count, check result, open `[VERIFY]` placeholders. The humanize pass (`humanize-pass` skill) runs next on the same file.
 
 ## Change requests
-When SEO or QC sends a request (page, section, change, reason), apply it if it keeps the voice and fact rules; otherwise refuse and say why. Rerun the self-check after every change.
+When SEO or QC sends a request (page, section, change, reason), apply it if it keeps the voice and fact rules; otherwise refuse and say why. Mark each row `done` or `refused: <reason>` in the requests file. When a request changes a heading, change the same heading in the outline so outline and page stay in step. Rerun the self-check after every change.

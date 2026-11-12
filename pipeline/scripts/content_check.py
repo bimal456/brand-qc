@@ -47,6 +47,15 @@ BANNED = [
 ]
 
 
+# sentences about the site's own process read as dev notes on a live page
+DEV_NOTES = [
+    "before publishing", "before publication", "once verified", "search results show", "according to search results",
+    "will be updated once", "to be confirmed", "placeholder",
+    "ennen julkaisua", "hakutuloksissa", "kun ne on tarkistettu", "kun ehdot on vahvistettu", "vahvistetaan ennen",
+    "vor der veröffentlichung", "avant publication", "voor publicatie", "innan publicering", "prima della pubblicazione",
+]
+
+
 def load(path):
     raw = open(path, encoding="utf-8").read()
     m = re.match(r"\s*<!--meta\s+(\{.*?\})\s*-->", raw, re.S)
@@ -125,6 +134,10 @@ def main():
     for nm in ["kap digital"] + [n.lower() for n in site.get("avoid_names", [])]:
         if nm and nm in low:
             F.append(f"forbidden name: '{nm}'")
+
+    for dn in DEV_NOTES:
+        if dn in low:
+            F.append(f"dev-note sentence: '{dn}' (rewrite as a normal sentence or remove)")
 
     # 6 headings
     heads = re.findall(r"^(#{1,6})\s+(.*)$", body, flags=re.M)
