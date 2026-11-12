@@ -12,7 +12,11 @@ Input: `<project>/site.json` from Step 1. Pipeline overview: `pipeline/README.md
 Scripts and templates are in the private repo `bimal456/brand-qc` (folder `pipeline/`). In a cloud session attach it with add_repo (owner `bimal456`, repo `brand-qc`) and clone it; paths below are relative to the repo root.
 
 ## 1. One sub-agent per keyword
+If the orchestrator started you for one page, you are that sub-agent: do steps 2-3 yourself and return your `APPROVAL.md` row instead of writing the file. The rest of this section is for running Step 2 on its own.
+
 Each keyword costs about 20-30k tokens (SERP call about 3k, each competitor page about 2.5k). Run every page keyword per geo in its own sub-agent so no single context fills up. Give each sub-agent: the keyword, the geo's `location_name` and `language_code`, the brand tokens, the output folder `brief/<geo>/<page>/`, and steps 2-3 below. It returns only a 3-line summary.
+
+Mandatory pages (responsible gambling, terms, privacy, about, contact) get no SERP calls. Write their outline straight from `site.json` facts and the geo's responsible-gambling rules and organisations, with the target words from `site.json` criteria (`mandatory`), and list them in `APPROVAL.md` like every other page.
 
 ## 2. Collect (inside the sub-agent)
 1. SERP: DataForSEO `POST /v3/serp/google/organic/live/advanced` with keyword, location_name, language_code, depth 10. Keep the organic results, "people also ask" and related searches. Record the call's datetime as `serp_call`. Results change between calls, so the ranking always comes from this first call.

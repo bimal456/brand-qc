@@ -35,3 +35,6 @@ Before reporting, sanity-check findings the script cannot judge:
 - Second-person counts in languages where the verb form carries "you" (Finnish voit/saat, etc.): treat as real.
 
 The script does not judge entity coverage, vague claims, bonus/T&C accuracy or templated section patterns. Mention these as a separate manual/AI check if the user asks for a full audit.
+
+## 5. Inside the brand-site pipeline
+When the site was built with the pipeline (`site.json` in the project), run `python3 pipeline/scripts/qc_route.py <project>` instead of calling `brand_qc.py` directly. It runs QC on `build/` with `qc/config.json` and sends every FAIL and REVIEW item to its owner in `qc/requests/<owner>.md` (content, design, seo, intake). Links to planned pages that are not built yet are listed as pending, not as defects. Exit 0 = nothing to fix, 1 = send the files to the owners, 3 = two rounds used, the user decides.

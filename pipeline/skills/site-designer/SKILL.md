@@ -41,3 +41,6 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
 
 ## 4. Hand off
 Report: the design choices in 3-5 lines (colours, fonts, layout), whether they come from the original brand or are a placeholder, what still differs from the original, the check result, and the screenshot files. Step 5 (SEO) adds head tags and site files through `seo/`, and the build picks them up.
+
+## Change requests
+QC sends template, CSS, image and link fixes in `qc/requests/design.md` (page | section | change | reason | status). Fix them in `design/` only, never in `content/` or `seo/`. A wording problem goes back to the content writer as a request. Rebuild, rerun `design_check.py`, and mark each row `done` or `refused: <reason>`.

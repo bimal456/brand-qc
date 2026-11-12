@@ -197,7 +197,7 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
             rep.add("Meta description 18+", "FAIL", path_url, "\"18+\" missing in meta description")
 
     # 4. Canonical / OG / Twitter consistency
-    can = soup.find("link", rel=lambda r: r and "canonical" in r)
+    can = soup.find("link", rel=lambda r: r and "canonical" in (r.split() if isinstance(r, str) else r))
     can_href = can.get("href", "").strip() if can else ""
     if not can_href:
         rep.add("Canonical", "FAIL", path_url, "missing canonical")
@@ -221,7 +221,7 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
         rep.add("OG / Twitter tags", "FAIL", path_url, "og:url does not match canonical")
 
     # 5. hreflang
-    alts = soup.find_all("link", rel=lambda r: r and "alternate" in r, hreflang=True)
+    alts = soup.find_all("link", rel=lambda r: r and "alternate" in (r.split() if isinstance(r, str) else r), hreflang=True)
     if not alts:
         rep.add("Hreflang", "FAIL", path_url, "no hreflang tags")
     else:
@@ -392,7 +392,7 @@ def run(site_dir, cfg):
         raw = open(fp, encoding="utf-8", errors="ignore").read()
         soup = BeautifulSoup(raw, "lxml")
         parsed[up] = (raw, soup)
-        can = soup.find("link", rel=lambda r: r and "canonical" in r)
+        can = soup.find("link", rel=lambda r: r and "canonical" in (r.split() if isinstance(r, str) else r))
         if can and can.get("href"):
             h = urlparse(can["href"]).netloc.lower().replace("www.", "")
             if h:

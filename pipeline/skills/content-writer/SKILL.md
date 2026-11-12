@@ -36,4 +36,4 @@ Run `python3 pipeline/scripts/content_check.py content/<geo>/<page>.md --outline
 Summary per page: words, H2 count, check result, open `[VERIFY]` placeholders. The humanize pass (`humanize-pass` skill) runs next on the same file.
 
 ## Change requests
-When SEO or QC sends a request (page, section, change, reason), apply it if it keeps the voice and fact rules; otherwise refuse and say why. Mark each row `done` or `refused: <reason>` in the requests file. When a request changes a heading, change the same heading in the outline so outline and page stay in step. Rerun the self-check after every change.
+Requests arrive in `seo/requests.md` (SEO) or `qc/requests/content.md` (QC). When a request arrives (page, section, change, reason), apply it if it keeps the voice and fact rules; otherwise refuse and say why. Mark each row `done` or `refused: <reason>` in the requests file. When a request changes a heading, change the same heading in the outline so outline and page stay in step. Rerun the self-check after every change.

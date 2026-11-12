@@ -26,3 +26,6 @@ Scripts are in the private repo `bimal456/brand-qc` (folder `pipeline/`). Attach
 ## 3. Build and hand off
 1. Rebuild: `python3 pipeline/scripts/build.py <project>` (add `--draft` only for previews while `[VERIFY]` placeholders remain).
 2. Hand off to Step 6 (`brand-qc`) with `qc/config.json`. Report: pages, schema types per page, hreflang set, open requests, and anything the user must supply (affiliate link, og image).
+
+## QC requests
+QC sends head-tag, schema, hreflang, sitemap and robots fixes in `qc/requests/seo.md`. Fix them in `site.json` SEO fields or by rerunning `seo_build.py` (fix the script in the repo when the bug is in it), rebuild, and mark each row `done` or `refused: <reason>`.

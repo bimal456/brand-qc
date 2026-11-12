@@ -37,4 +37,4 @@ Start from the site type's default pages (brand: home + bonus + login + mandator
 3. Self-check before handing off: every geo has location_name and language_code, every non-mandatory page has a keyword per geo, every fact has a source or is marked unverified.
 
 ## 5. Hand off
-Show the user a short summary: pages and keywords per geo, verified facts, unverified facts, and the criteria that differ from defaults. Step 2 starts after the user confirms.
+Show the user a short summary: pages and keywords per geo, verified facts, unverified facts, and the criteria that differ from defaults. Step 2 starts after the user confirms; then set `"intake_confirmed": "<date>"` in `site.json`.
