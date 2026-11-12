@@ -62,7 +62,7 @@ A page must never turn into a wall of text: the lobby blocks at the top are not 
 2. Open the screenshots in `design/shots/` (top part of each page at both widths) next to the original brand's screenshots and compare: colours, buttons, header and menu, game rows, spacing. Fix what does not match or looks broken, cramped or templated, then rebuild and recheck.
 
 ## 4. Hand off
-Report: the design choices in 3-5 lines, the image plan per page (how many visuals from each source, any still missing) (colours, fonts, layout), whether they come from the original brand or are a placeholder, what still differs from the original, the check result, and the screenshot files. Step 5 (SEO) adds head tags and site files through `seo/`, and the build picks them up.
+Report: the design choices in 3-5 lines (colours, fonts, layout), the image plan per page (how many visuals from each source, any still missing), whether they come from the original brand or are a placeholder, what still differs from the original, the check result, and the screenshot files. Step 5 (SEO) adds head tags and site files through `seo/`, and the build picks them up.
 
 ## Change requests
 QC sends template, CSS, image and link fixes in `qc/requests/design.md` (page | section | change | reason | status). Fix them in `design/` only, never in `content/` or `seo/`. A wording problem goes back to the content writer as a request. Rebuild, rerun `design_check.py`, and mark each row `done` or `refused: <reason>`.
