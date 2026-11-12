@@ -20,10 +20,13 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
 4. Open the reference site from site.json (or the top competitor for the main keyword). Note layout only: header height, content width, how sections and tables are shown. Take ideas, never copy markup, text or images.
 
 ## 2. Build the design
-1. If `<project>/design/` does not exist yet, copy `pipeline/design-starter/` there. Then change it to the brand:
-   - `theme.json`: brand name, logo token, labels per geo (login, register, footer titles, legal line with 18+).
-   - `assets/css/site.css`: brand colours and fonts, spacing, tables, footer. Keep it one file, mobile first.
-   - `templates/`: base, header and footer. Header carries only the logo plus Login and Register buttons to the play path (both `rel="nofollow sponsored"`). Footer carries the pages list, the geo's responsible-gambling links, the 18+ badge and the legal line.
+1. If `<project>/design/` does not exist yet, copy `pipeline/design-starter/` there (a casino-lobby starter: sidebar, header, hero, game carousels, promos, content with sticky table of contents, providers, CTA band). Then rebuild it into the original brand's look and layout:
+   - `layouts.json`: block order per page type, matching the original (for example home `["hero", "games:popular", "games:new", "promos", "content", "providers", "cta"]`). Inner pages get a shorter set; mandatory pages usually just `content`. A single page can be overridden with a `"<geo>/<page>"` key.
+   - `data/games.json`: game rows named like the original (localized), each item a real game with name, provider and a cropped WebP thumbnail. `data/promos.json` only from verified facts. `data/providers.json`.
+   - `assets/css/site.css`: change the variables at the top (colours, gradients, fonts, radius, shadows) and the component styles until the screenshots look like the original. One file, mobile first.
+   - `templates/`: base, header, sidebar (empty it if the original has none), footer and `blocks/`. Play-path links are always `rel="nofollow sponsored"`. Footer carries the pages list, the geo's responsible-gambling links, the 18+ badge and the legal line.
+   - Header nav: follow the original brand's header unless `site.json` `criteria.header_page_links` is false; then the header carries only the logo plus Login/Register and page links move to the sidebar or footer. The current page's link carries `aria-current="page"`; style it.
+   - `theme.json`: brand name, logo token (inline SVG or `<img>` with width and height), labels per geo (any extra label key becomes a template token), `toc` on or off.
 2. Images: screenshots turned into WebP with Pillow (`quality=82`) and stored in `design/assets/img/`. Place them per page section in `design/images.json` (format in the `build.py` docstring: key `<geo>/<page>`, then `intro` or the section id, with src, alt, width, height). The build inserts them after the section's H2 and sets `fetchpriority`/`lazy` itself. Alt text is localized. No images of real people.
 3. Rules from the user:
    - Look of the original brand, unique per brand; never the same template with a new colour. No badge, pill or checkmark overload, no identical repeated card blocks, no letter-badge placeholder logos.
@@ -33,8 +36,8 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
 4. Build a preview: `python3 pipeline/scripts/build.py <project> --draft` (without `--draft` the build stops while `[VERIFY]` placeholders remain).
 
 ## 3. Self-check
-1. `python3 pipeline/scripts/design_check.py <project> --shots` must PASS (no overflow at 375 or 1366, no console errors, WebP images with alt, no `#` links, nofollow play links, one H1, no heading skips).
+1. `python3 pipeline/scripts/design_check.py <project> --shots` must PASS (no FAIL: no overflow at 375 or 1366, no console errors, WebP images with alt, no `#` links, nofollow play links, 18+ and responsible-gambling links in the footer, one H1, no heading skips). REVIEW notes about web fonts not loading in the sandbox or links to pages not built yet are fine.
 2. Open the screenshots in `design/shots/` (top part of each page at both widths) next to the original brand's screenshots and compare: colours, buttons, header and menu, game rows, spacing. Fix what does not match or looks broken, cramped or templated, then rebuild and recheck.
 
 ## 4. Hand off
-Report: the design choices in 3-5 lines (colours, fonts, layout idea), the check result, and the screenshot files. Step 5 (SEO) adds head tags and site files through `seo/`, and the build picks them up.
+Report: the design choices in 3-5 lines (colours, fonts, layout), whether they come from the original brand or are a placeholder, what still differs from the original, the check result, and the screenshot files. Step 5 (SEO) adds head tags and site files through `seo/`, and the build picks them up.
