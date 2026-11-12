@@ -8,6 +8,9 @@ description: Step 2 of the brand-site pipeline. Run SERP analysis per page keywo
 Goal: an approved outline per page and geo, built from what ranks, not from what AI thinks is good.
 Input: `<project>/site.json` from Step 1. Pipeline overview: `pipeline/README.md` in repo `bimal456/brand-qc`.
 
+## 0. Get the files
+Scripts and templates are in the private repo `bimal456/brand-qc` (folder `pipeline/`). In a cloud session attach it with add_repo (owner `bimal456`, repo `brand-qc`) and clone it; paths below are relative to the repo root.
+
 ## 1. One sub-agent per keyword
 Each keyword costs roughly 30-60k tokens of SERP data (more when pages fail). Run every page keyword per geo in its own sub-agent so no single context fills up. Give each sub-agent: the keyword, the geo's `location_name` and `language_code`, the brand tokens, the output folder `brief/<geo>/<page>/`, and steps 2-3 below. It returns only a 3-line summary.
 

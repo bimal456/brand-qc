@@ -8,6 +8,9 @@ description: Step 1 of the brand-site pipeline. Collect brand, geo and domain, v
 Goal: one `site.json` that every later step trusts. Nothing in it may be invented.
 Pipeline overview and folder layout: `pipeline/README.md` in repo `bimal456/brand-qc`.
 
+## 0. Get the files
+Scripts and templates are in the private repo `bimal456/brand-qc` (folder `pipeline/`). In a cloud session attach it with add_repo (owner `bimal456`, repo `brand-qc`) and clone it; paths below are relative to the repo root.
+
 ## 1. Ask the user (one round)
 Required: **brand**, **geo(s)**, **domain**. Ask in one question round only for what is missing:
 - Site type: `brand` (first-party voice), `affiliate-listicle` (ranks several casinos) or `expired-onepage`.
