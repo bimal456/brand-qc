@@ -22,6 +22,7 @@ Required: **brand**, **geo(s)**, **domain**. Ask in one question round only for 
 Open the brand's real site in the user's browser (Chrome). Read the footer, bonus terms and cashier pages. Record each fact with its source URL and today's date:
 - operator company and registration number, licence number and regulator
 - welcome bonus, wagering, min deposit, max withdrawal, payment methods, game count, providers, support hours and email
+Also collect `brand_assets` for the designer: logo URL or file, 2-4 brand colours (hex), font names, and 3-6 screenshots (lobby, promotions, cashier) saved in `<project>/assets-in/`. Casino sites often block visitors outside their market; if the brand site does not open, ask the user for these files instead of guessing.
 A fact without a source goes in with an empty `source` and is marked unverified. Later steps must not use unverified facts, so every fact the pages depend on (bonus terms, payments, limits) must be verified here, or the content step fills the page with `[VERIFY]` placeholders.
 
 ## 3. Pick pages and keywords

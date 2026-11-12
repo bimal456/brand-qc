@@ -7,7 +7,11 @@ Usage: python3 build.py <project> [--draft]
 Reads
   site.json                         brand, geos, pages, play_path
   content/<geo>/<page>.md           Step 3 (content owner)
-  design/theme.json                 Step 4 (design owner): brand name, logo, colours, fonts, labels
+  design/theme.json                 Step 4 (design owner): brand name, template tokens, labels per geo
+                                    (colours and fonts live in design/assets/css/site.css)
+  design/images.json                Step 4 (optional): images per page section, inserted after the H2
+                                    {"fi/bonus": {"intro": {...}, "<section-id>": {"src": "/assets/img/x.webp",
+                                     "alt": "...", "width": 1200, "height": 750}}}
   design/templates/*.html           Step 4: base.html, header.html, footer.html
   design/assets/                    Step 4: css, js, images (copied to build/assets/)
   seo/head/<geo>/<page>.html        Step 5 (SEO owner): extra <head> tags (og, schema, hreflang)
@@ -60,17 +64,34 @@ def url_for(prefix, slug):
     return (p + s) or "/"
 
 
-def body_html(md_text, play_path, internal_host):
+def figure(img, first):
+    load = 'fetchpriority="high"' if first else 'loading="lazy" decoding="async"'
+    return (f'<figure class="fig"><img src="{img["src"]}" alt="{html.escape(img.get("alt", ""), quote=True)}" '
+            f'width="{img.get("width", "")}" height="{img.get("height", "")}" {load}></figure>')
+
+
+def body_html(md_text, play_path, internal_host, images=None):
+    images = images or {}
+    first = [True]
+
+    def fig(key):
+        if key in images:
+            f = figure(images[key], first[0])
+            first[0] = False
+            return f
+        return ""
     h = markdown.markdown(md_text, extensions=["tables", "sane_lists"])
     # sections: wrap each H2 block
     parts = re.split(r"(?=<h2>)", h)
     out = []
     for i, part in enumerate(parts):
         if i == 0 and not part.startswith("<h2>"):
-            out.append(f'<div class="intro">{part}</div>' if part.strip() else "")
+            out.append(f'<div class="intro">{part}{fig("intro")}</div>' if part.strip() else "")
             continue
         m = re.match(r"<h2>(.*?)</h2>", part, re.S)
         sid = slugify(re.sub("<.*?>", "", m.group(1))) if m else f"s{i}"
+        if m and sid in images:
+            part = part[:m.end()] + fig(sid) + part[m.end():]
         out.append(f'<section class="sec" id="{sid}">{part}</section>')
     h = "\n".join(out)
     h = re.sub(r"<table>", '<div class="tbl"><table>', h)
@@ -95,6 +116,9 @@ def main():
     site = json.load(open(os.path.join(proj, "site.json"), encoding="utf-8"))
     dz = os.path.join(proj, "design")
     theme = json.load(open(os.path.join(dz, "theme.json"), encoding="utf-8"))
+    images_all = {}
+    if os.path.exists(os.path.join(dz, "images.json")):
+        images_all = json.load(open(os.path.join(dz, "images.json"), encoding="utf-8"))
     tpl = {n: open(os.path.join(dz, "templates", f"{n}.html"), encoding="utf-8").read()
            for n in ("base", "header", "footer")}
     play = site.get("play_path", "/play")
@@ -123,11 +147,17 @@ def main():
                 meta, md = load_md(os.path.join(cdir, fn))
                 pages.append((fn[:-3], meta, md))
         labels = theme.get("labels", {}).get(geo, {})
+
+        def nav(m):
+            if m.get("nav_label"):
+                return m["nav_label"]
+            slug = m.get("slug", "/").strip("/")
+            return labels.get("home", "Home") if not slug else slug.replace("-", " ").capitalize()
         footer_links = "".join(
-            f'<li><a href="{url_for(g["prefix"], m.get("slug", "/"))}">{html.escape(m.get("nav_label") or m.get("h1", ""))}</a></li>'
+            f'<li><a href="{url_for(g["prefix"], m.get("slug", "/"))}">{html.escape(nav(m))}</a></li>'
             for _, m, _ in pages if m.get("type") == "mandatory")
         main_links = "".join(
-            f'<li><a href="{url_for(g["prefix"], m.get("slug", "/"))}">{html.escape(m.get("nav_label") or m.get("h1", ""))}</a></li>'
+            f'<li><a href="{url_for(g["prefix"], m.get("slug", "/"))}">{html.escape(nav(m))}</a></li>'
             for _, m, _ in pages if m.get("type") != "mandatory")
         rg_links = "".join(
             f'<li><a href="https://{d}/" rel="nofollow noopener" target="_blank">{d}</a></li>' for d in RG.get(geo, []))
@@ -153,7 +183,7 @@ def main():
                 "canonical": f"https://{host}{url_for(g['prefix'], slug)}",
                 "head_extra": open(head_extra_p, encoding="utf-8").read() if os.path.exists(head_extra_p) else "",
                 "h1": html.escape(meta.get("h1", "")), "page_type": meta.get("type", "other"),
-                "body": body_html(md, play, host),
+                "body": body_html(md, play, host, images_all.get(f"{geo}/{name}", {})),
             })
             out = os.path.join(build, out_path(g["prefix"], slug))
             os.makedirs(os.path.dirname(out), exist_ok=True)

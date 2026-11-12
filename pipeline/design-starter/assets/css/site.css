@@ -28,3 +28,4 @@ mark.verify{background:#ffe08a;color:#000;padding:0 3px}
 .legal{margin-top:24px;color:var(--muted);font-size:14px}
 .badge18{display:inline-block;border:2px solid var(--ink);border-radius:50%;width:34px;height:34px;line-height:30px;text-align:center;font-weight:700;margin-right:6px}
 @media (max-width:480px){.btn{padding:8px 11px;font-size:14px}.content{padding-top:24px}}
+img{max-width:100%;height:auto;display:block}.fig{margin:22px 0}

@@ -56,7 +56,11 @@ JS = r"""
   let prev = 0; r.skips = [];
   document.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h => { const l = +h.tagName[1]; if (prev && l > prev + 1) r.skips.push('H'+prev+'>H'+l); if (!prev && l > 1) r.skips.push('first heading H'+l); prev = l; });
   r.hash = [...document.querySelectorAll('a[href*="#"]')].map(a => a.getAttribute('href')).slice(0,5);
-  r.headerLinks = [...document.querySelectorAll('header a')].filter(a => !a.classList.contains('logo') && !a.classList.contains('btn')).map(a => a.getAttribute('href'));
+  r.headerLinks = [...document.querySelectorAll('header a')].map(a => (a.getAttribute('href')||'')).filter(h => h.replace(/\/$/,'') !== PLAY && !/^\/([a-z]{2}(-[a-z]{2})?\/?)?$/.test(h));
+  const foot = document.querySelector('footer');
+  r.foot18 = !!foot && foot.textContent.includes('18+');
+  r.footExt = foot ? [...foot.querySelectorAll('a[href^="http"]')].length : 0;
+  r.internal = [...new Set([...document.querySelectorAll('a[href^="/"]')].map(a => a.getAttribute('href').split('?')[0].replace(/\/$/,'') || '/'))];
   r.imgs = [...document.querySelectorAll('img')].map(i => ({src: i.getAttribute('src')||'', alt: i.getAttribute('alt'), w: i.getAttribute('width'), h: i.getAttribute('height')}));
   r.playNoNofollow = [...document.querySelectorAll('a')].filter(a => (a.getAttribute('href')||'').replace(/\/$/,'') === PLAY && !(a.getAttribute('rel')||'').includes('nofollow')).length;
   return r;
@@ -80,7 +84,11 @@ def main():
     srv = serve(build)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     if shots:
-        os.makedirs(os.path.join(proj, "design", "shots"), exist_ok=True)
+        sd = os.path.join(proj, "design", "shots")
+        os.makedirs(sd, exist_ok=True)
+        for f in os.listdir(sd):  # stale shots of removed pages
+            if f.endswith(".png"):
+                os.remove(os.path.join(sd, f))
     fails, reviews = [], []
     with sync_playwright() as p:
         b = p.chromium.launch()
@@ -107,7 +115,14 @@ def main():
                     if r["hash"]:
                         fails.append(f"{url}: href with #: {', '.join(r['hash'])}")
                     if r["headerLinks"]:
-                        reviews.append(f"{url}: header has page links {r['headerLinks'][:4]} (header should carry only Login/Register)")
+                        reviews.append(f"{url}: header has page links {r['headerLinks'][:4]} (header should carry only logo + Login/Register)")
+                    if not r["foot18"]:
+                        fails.append(f"{url}: no 18+ in footer")
+                    if not r["footExt"]:
+                        fails.append(f"{url}: no responsible-gambling links in footer")
+                    missing = [u for u in r["internal"] if u != play and not u.startswith("/assets") and u not in pages]
+                    if missing:
+                        reviews.append(f"{url}: links to pages not built yet: {', '.join(missing[:6])}")
                     if r["playNoNofollow"]:
                         fails.append(f"{url}: {r['playNoNofollow']} play links without nofollow")
                     for i in r["imgs"]:

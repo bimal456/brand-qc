@@ -33,6 +33,13 @@
     {"slug": "/tietoa-meista", "type": "mandatory", "keywords": {"fi": ""}},
     {"slug": "/ota-yhteytta", "type": "mandatory", "keywords": {"fi": ""}}
   ],
+  "brand_assets": {
+    "logo": "",
+    "colors": [],
+    "fonts": [],
+    "screenshots": [],
+    "source": "brand site / user supplied"
+  },
   "facts": [
     {"claim": "Operator: White Hat Gaming Limited (Malta, reg. C73232)", "source": "https://www.munkkikasino.com/fi-fi/pelintarjoajat", "checked": "2026-11-12"},
     {"claim": "Licence: MGA/B2C/370/2017", "source": "", "checked": ""},
