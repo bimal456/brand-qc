@@ -98,15 +98,19 @@ def main():
                 pg = ctx.new_page()
                 errs = []
                 pg.on("console", lambda m, errs=errs: errs.append(m.text) if m.type == "error" else None)
-                pg.on("requestfailed", lambda r, errs=errs: errs.append("failed " + r.url))
+                ext = []
+                pg.on("requestfailed", lambda r, errs=errs, ext=ext: (ext if not r.url.startswith(base) else errs).append("failed " + r.url))
                 pg.on("response", lambda r, errs=errs: errs.append(f"{r.status} {r.url}") if r.status >= 400 else None)
                 pg.goto(base + url, wait_until="networkidle")
                 r = pg.evaluate(JS.replace("PLAY", json.dumps(play)))
                 tag = f"{url} @{width}"
                 if r["overflow"] > 1:
                     fails.append(f"{tag}: horizontal overflow {r['overflow']}px ({', '.join(r['wide'])})")
+                errs = [e for e in errs if base in e or not e.startswith(("failed", "4", "5"))]
                 if errs:
                     fails.append(f"{tag}: console/network errors: {'; '.join(errs[:3])}")
+                if ext and width == 1366:
+                    reviews.append(f"{url}: external assets not loaded here (fine if they load live, e.g. web fonts): {', '.join(sorted(set(e.split('/')[2] for e in ext if '//' in e)))}")
                 if width == 1366:
                     if r["h1"] != 1:
                         fails.append(f"{url}: {r['h1']} h1 tags")
@@ -115,7 +119,7 @@ def main():
                     if r["hash"]:
                         fails.append(f"{url}: href with #: {', '.join(r['hash'])}")
                     if r["headerLinks"]:
-                        reviews.append(f"{url}: header has page links {r['headerLinks'][:4]} (header should carry only logo + Login/Register)")
+                        reviews.append(f"{url}: header has page links {r['headerLinks'][:4]} (fine when the original brand site has this nav; otherwise header carries only logo + Login/Register)")
                     if not r["foot18"]:
                         fails.append(f"{url}: no 18+ in footer")
                     if not r["footExt"]:

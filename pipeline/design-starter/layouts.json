@@ -1,0 +1,5 @@
+{
+  "home": ["hero", "games:popular", "games:new", "promos", "content", "providers", "cta"],
+  "other": ["hero", "content", "cta"],
+  "mandatory": ["content"]
+}

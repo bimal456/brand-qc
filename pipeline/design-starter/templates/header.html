@@ -1,9 +1,11 @@
 <header class="top">
-  <div class="wrap top-in">
-    <a class="logo" href="{{home}}">{{logo_text}}</a>
+  <div class="top-in">
+    <button type="button" class="menu-btn" data-menu aria-label="{{menu}}"><span></span><span></span><span></span></button>
+    <a class="logo" href="{{home}}">{{logo}}</a>
+    <nav class="top-nav"><ul>{{main_links}}</ul></nav>
     <div class="top-cta">
-      <a class="btn btn-ghost" href="{{play}}" rel="nofollow sponsored">{{login_label}}</a>
-      <a class="btn" href="{{play}}" rel="nofollow sponsored">{{register_label}}</a>
+      <a class="btn btn-ghost" href="{{play}}" rel="nofollow sponsored">{{login}}</a>
+      <a class="btn btn-main" href="{{play}}" rel="nofollow sponsored">{{register}}</a>
     </div>
   </div>
 </header>
