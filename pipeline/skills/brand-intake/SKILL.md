@@ -22,7 +22,7 @@ Required: **brand**, **geo(s)**, **domain**. Ask in one question round only for 
 Open the brand's real site in the user's browser (Chrome). Read the footer, bonus terms and cashier pages. Record each fact with its source URL and today's date:
 - operator company and registration number, licence number and regulator
 - welcome bonus, wagering, min deposit, max withdrawal, payment methods, game count, providers, support hours and email
-A fact without a source goes in with an empty `source` and is marked unverified. Later steps must not use unverified facts.
+A fact without a source goes in with an empty `source` and is marked unverified. Later steps must not use unverified facts, so every fact the pages depend on (bonus terms, payments, limits) must be verified here, or the content step fills the page with `[VERIFY]` placeholders.
 
 ## 3. Pick pages and keywords
 Start from the site type's default pages (brand: home + bonus + login + mandatory pages; listicle: hub + mandatory pages). For each page and geo, check brand-intent keywords with DataForSEO (`dataforseo_labs/google/keyword_suggestions/live` for the brand name, location and language of the geo). Add a page only if its keyword has search demand. Mandatory pages need no keyword.

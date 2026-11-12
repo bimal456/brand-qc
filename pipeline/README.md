@@ -7,7 +7,7 @@ Agents never rely on each other's memory: every step reads files from the projec
 |---|---|---|---|---|
 | 1 Intake | `brand-intake` | user input, brand's real site | `site.json`, `qc/config.json` | brand facts, site criteria |
 | 2 SERP architect | `serp-architect` | `site.json` | `brief/<geo>/<page>/serp.json`, `consensus.md`, `outline.md`, `brief/APPROVAL.md` | page structure |
-| 3 Content | (next) | `site.json`, approved outlines | `content/<geo>/<page>.md` | all wording |
+| 3 Content | `content-writer`, then `humanize-pass` | `site.json`, approved outlines | `content/<geo>/<page>.md` | all wording |
 | 4 Design | (next) | `site.json`, `content/` | `design/` templates, `build/` | layout, visuals |
 | 5 SEO | (next) | `build/`, `content/` | technical files, `seo/requests.md` | meta, schema, hreflang, links |
 | 6 QC | `brand-qc` | `build/`, `qc/config.json` | `qc/report-*.md` | nothing (reports only) |

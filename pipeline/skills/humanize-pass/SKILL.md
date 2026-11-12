@@ -1,0 +1,40 @@
+---
+name: humanize-pass
+description: Step 3b of the brand-site pipeline. Run three separate passes on a written content file (strip AI patterns, add human signals, tune for search and AI extraction) without changing facts or structure.
+---
+
+# Humanize pass (Step 3b, the "MSO")
+
+Goal: the same page, reading like an experienced person wrote it. Runs on `content/<geo>/<page>.md` after the content writer's self-check passes.
+
+## Hard limits (all passes)
+- Do not change headings, their order or their level, the front-matter, facts, numbers, links or `[VERIFY]` placeholders.
+- Do not add new claims. Every concrete detail added must already be supported by site.json facts or the existing text.
+- Keep the site.json voice rules (no "you" unless allowed, brand first person, no em dashes).
+- Word count stays within 5% of the original.
+
+Run the three passes **one at a time**, each as a fresh read of the file. Do not combine them.
+
+## Pass 1: strip AI patterns
+Remove or rewrite:
+- stock phrases ("in today's", "it's important to note", "whether you're", "navigating", "seamless", "in conclusion" and their equivalents in the page's language)
+- sentences that restate the heading, empty openers and empty closers of a section
+- triplets of adjectives, every paragraph ending in a summary line, the same sentence shape repeated
+- hedging stacks ("can often typically"), and lists that should be one sentence
+
+## Pass 2: human signals
+- Vary rhythm: mix short sentences with longer ones; break any run of similar sentences.
+- Replace a generic statement with the concrete detail that exists in the facts (an amount, a time, a step, a game name).
+- Add a plain opinion or practical note where it helps a decision, in the brand's voice (for example which option suits a small deposit). No fake personal stories, no invented testimonials.
+- Use the words people in that market use (check competitor headings in `brief/<geo>/<page>/consensus.md`).
+- Sentences that describe the site's own process ("figures are confirmed before publishing") are dev notes: rewrite them into a normal sentence around the placeholder, keeping the placeholder, and list them in the report.
+
+## Pass 3: search and extraction
+- Each section starts with a one or two sentence direct answer to its heading.
+- Keyword and close variants appear naturally in the intro and in some H2 sections; never forced, never stuffed.
+- Comparable data (amounts, limits, times) sits in a short table or list so search engines and AI answers can extract it.
+- FAQ answers start with the answer, then one line of detail.
+- Skip a table when its values would be `[VERIFY]` placeholders.
+
+## Check and hand off
+Run `python3 pipeline/scripts/content_check.py content/<geo>/<page>.md --outline brief/<geo>/<page>/outline.md` before and after. The pass must add no new FAIL or REVIEW item; flags that come from the original content (word shortfall, open placeholders) go back to the content writer, not to this pass. Report what changed per pass in 3-6 lines.
