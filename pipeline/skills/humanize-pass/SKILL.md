@@ -7,6 +7,9 @@ description: Step 3b of the brand-site pipeline. Run three separate passes on a 
 
 Goal: the same page, reading like an experienced person wrote it. Runs on `content/<geo>/<page>.md` after the content writer's self-check passes.
 
+## 0. Get the files
+The check script is in the private repo `bimal456/brand-qc` (folder `pipeline/`). Attach it with add_repo (owner `bimal456`, repo `brand-qc`) and clone it.
+
 ## Hard limits (all passes)
 - Do not change headings, their order or their level, the front-matter, facts, numbers, links or `[VERIFY]` placeholders.
 - Do not add new claims. Every concrete detail added must already be supported by site.json facts or the existing text.
