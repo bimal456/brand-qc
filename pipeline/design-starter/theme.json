@@ -1,0 +1,8 @@
+{
+  "brand": "Brand Casino",
+  "tokens": {"logo_text": "Brand"},
+  "labels": {
+    "fi": {"login": "Kirjaudu", "register": "Rekisteröidy", "pages_title": "Tietoa", "rg_title": "Vastuullinen pelaaminen", "legal": "18+ | Pelaa vastuullisesti."},
+    "en": {"login": "Login", "register": "Register", "pages_title": "Info", "rg_title": "Play responsibly", "legal": "18+ only. Play responsibly."}
+  }
+}
