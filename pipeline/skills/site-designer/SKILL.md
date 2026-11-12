@@ -32,7 +32,7 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
    - Look of the original brand, unique per brand; never the same template with a new colour. No badge, pill or checkmark overload, no identical repeated card blocks, no letter-badge placeholder logos.
    - No accordion FAQ unless site.json allows it. No age-gate popup.
    - No `#` in any href: same-page jumps use `<button data-jump="id">` (handled by `assets/js/site.js`).
-   - Opening of each page stays plain text (no boxes before the first H2).
+   - The intro text inside the hero stays plain prose (no lists, tables or cards inside it).
 4. Build a preview: `python3 pipeline/scripts/build.py <project> --draft` (without `--draft` the build stops while `[VERIFY]` placeholders remain).
 
 ## 3. Self-check
