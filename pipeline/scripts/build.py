@@ -19,7 +19,16 @@ Reads
   design/data/promos.json           [{"title": {"fi": ".."}, "text": {"fi": ".."}, "img": "..", "w": .., "h": ..}]
                                     (promo text = verified facts only)
   design/data/providers.json        [{"name": "NetEnt", "img": "/assets/img/p/netent.webp", "w": 120, "h": 40}]
-  design/images.json                optional images per content section {"fi/bonus": {"intro"|"<section-id>": {...}}}
+  design/images.json                visuals per page (see design/image_plan in the site-designer skill):
+      {"fi/bonus": {"hero": IMG,                       # the page's own hero art (every page a different one)
+                    "intro": V, "<section-id>": V,     # after the section's H2
+                    "<section-id>@end": V}}            # at the end of the section
+      V   = one visual or a list of visuals
+      IMG = {"src": "/assets/img/x.webp", "alt": "..", "width": 600, "height": 400, "src2x": "/assets/img/x@2x.webp"}
+            (width/height = display size; src2x optional, adds srcset 2x)
+      game strip  = {"games": "popular", "limit": 6}         # tiles of a games.json row, no heading
+      HTML visual = {"html": "visuals/bonus-steps.html"}   # file in design/, CSS/HTML component (steps, coin
+            strip, VIP tiers, game row); {{tokens}} from theme labels work inside it
   design/assets/                    css, js, img -> build/assets/
   seo/head/<geo>/<page>.html        Step 5 (SEO owner): extra <head> tags
   seo/files/                        Step 5: robots.txt, sitemap.xml, _redirects, _headers -> build/
@@ -91,14 +100,34 @@ class Img:
     def __init__(self):
         self.first = True
 
-    def tag(self, src, alt, w, h, cls=""):
+    def tag(self, src, alt, w, h, cls="", src2x=""):
         load = 'fetchpriority="high"' if self.first else 'loading="lazy" decoding="async"'
         self.first = False
         c = f' class="{cls}"' if cls else ""
-        return f'<img{c} src="{src}" alt="{E(alt, quote=True)}" width="{w}" height="{h}" {load}>'
+        ss = f' srcset="{src} 1x, {src2x} 2x"' if src2x else ""
+        return f'<img{c} src="{src}"{ss} alt="{E(alt, quote=True)}" width="{w}" height="{h}" {load}>'
 
 
-def md_parts(md_text, play_path, host, images, img):
+def visual(v, img, design_dir, ctx):
+    """One entry of images.json (or a list of them) -> HTML."""
+    if isinstance(v, list):
+        return "".join(visual(x, img, design_dir, ctx) for x in v)
+    if not v:
+        return ""
+    if v.get("games"):
+        strip = ctx.get("_game_strip")
+        return strip(v["games"], v.get("limit", 8)) if strip else ""
+    if v.get("html"):
+        f = os.path.join(design_dir, v["html"])
+        if not os.path.exists(f):
+            print(f"WARNING: visual {v['html']} not found")
+            return ""
+        return f'<div class="vis" data-visual>{fill(open(f, encoding="utf-8").read(), ctx)}</div>'
+    return (f'<figure class="fig">{img.tag(v["src"], v.get("alt", ""), v.get("width", ""), v.get("height", ""), "", v.get("src2x", ""))}'
+            '</figure>')
+
+
+def md_parts(md_text, play_path, host, images, img, design_dir="", ctx=None):
     """Returns (intro_html, sections_html, toc_list)."""
     h = markdown.markdown(md_text, extensions=["tables", "sane_lists"])
 
@@ -115,10 +144,7 @@ def md_parts(md_text, play_path, host, images, img):
     h = re.sub(r"</table>", "</table></div>", h)
 
     def fig(key):
-        i = images.get(key)
-        if not i:
-            return ""
-        return f'<figure class="fig">{img.tag(i["src"], i.get("alt", ""), i.get("width", ""), i.get("height", ""))}</figure>'
+        return visual(images.get(key), img, design_dir, ctx or {})
 
     parts = re.split(r"(?=<h2>)", h)
     intro, secs, toc = "", [], []
@@ -131,7 +157,7 @@ def md_parts(md_text, play_path, host, images, img):
         sid = slugify(title) if m else f"s{i}"
         if m:
             toc.append((sid, title))
-            part = part[:m.end()] + fig(sid) + part[m.end():]
+            part = part[:m.end()] + fig(sid) + part[m.end():] + fig(sid + "@end")
         secs.append(f'<section class="sec" id="{sid}">{part}</section>')
     return intro, "\n".join(secs), toc
 
@@ -205,11 +231,30 @@ def main():
             if ph:
                 problems.append(f"{geo}/{name}: {len(ph)} [VERIFY] placeholders")
             img = Img()
-            intro, sections, toc = md_parts(md, play, host, images_all.get(f"{geo}/{name}", {}), img)
+
+            def game_strip(key, limit, img=img):
+                row = games.get(key)
+                if not row:
+                    skipped.add(f"games data '{key}'")
+                    return ""
+                card = tpl("blocks/game_card")
+                cards = "".join(fill(card, dict(common, name=E(it["name"]), provider=E(it.get("provider", "")),
+                                                img=img.tag(it["img"], it["name"], it.get("w", ""), it.get("h", ""), "g-img")))
+                                for it in row.get("items", [])[:limit])
+                return f'<div class="vis vis-games" data-visual><ul class="track">{cards}</ul></div>'
+            common["_game_strip"] = game_strip
+            pimgs = images_all.get(f"{geo}/{name}", {})
+            hero_img = visual(pimgs.get("hero"), img, dz, common) if pimgs.get("hero") else ""
+            intro, sections, toc = md_parts(md, play, host, pimgs, img, dz, common)
+            known = {"hero", "intro"} | {sid for sid, _ in toc} | {sid + "@end" for sid, _ in toc}
+            for k in pimgs:
+                if k not in known:
+                    print(f"WARNING {geo}/{name}: images.json slot '{k}' matches no section "
+                          f"(run make_images.py <project> --slots for the ids)")
             ptype = meta.get("type", "other")
             order = layouts.get(f"{geo}/{name}") or layouts.get(ptype) or layouts.get("other", ["hero", "content"])
             ctx = dict(common)
-            ctx.update({"h1": E(meta.get("h1", "")), "intro": intro, "page_type": ptype})
+            ctx.update({"h1": E(meta.get("h1", "")), "intro": intro, "page_type": ptype, "hero_img": hero_img})
             blocks = []
             for b in order:
                 kind, _, key = b.partition(":")

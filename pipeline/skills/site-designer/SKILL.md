@@ -27,7 +27,7 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
    - `templates/`: base, header, sidebar (empty it if the original has none), footer and `blocks/`. Play-path links are always `rel="nofollow sponsored"`. Footer carries the pages list, the geo's responsible-gambling links, the 18+ badge and the legal line.
    - Header nav: follow the original brand's header unless `site.json` `criteria.header_page_links` is false; then the header carries only the logo plus Login/Register and page links move to the sidebar or footer. The current page's link carries `aria-current="page"`; style it.
    - `theme.json`: brand name, logo token (inline SVG or `<img>` with width and height), labels per geo (any extra label key becomes a template token), `toc` on or off.
-2. Images: screenshots turned into WebP with Pillow (`quality=82`) and stored in `design/assets/img/`. Place them per page section in `design/images.json` (format in the `build.py` docstring: key `<geo>/<page>`, then `intro` or the section id, with src, alt, width, height). The build inserts them after the section's H2 and sets `fetchpriority`/`lazy` itself. Alt text is localized. No images of real people.
+2. Images: follow section 2b. No images of real people.
 3. Rules from the user:
    - Look of the original brand, unique per brand; never the same template with a new colour. No badge, pill or checkmark overload, no identical repeated card blocks, no letter-badge placeholder logos.
    - No accordion FAQ unless site.json allows it. No age-gate popup.
@@ -35,12 +35,34 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
    - The intro text inside the hero stays plain prose (no lists, tables or cards inside it).
 4. Build a preview: `python3 pipeline/scripts/build.py <project> --draft` (without `--draft` the build stops while `[VERIFY]` placeholders remain).
 
+## 2b. Image plan (every page, before the build)
+A page must never turn into a wall of text: the lobby blocks at the top are not enough. Plan the visuals of every page in `design/image_plan.json` (format at the top of `pipeline/scripts/make_images.py`) and let the script write `design/images.json`.
+
+1. **Slots:** build once with `--draft`, then `python3 pipeline/scripts/make_images.py <project> --slots` lists each page's slots: `hero`, `intro`, every section id, and `<id>@end`. Copy the ids exactly; they keep the page's own letters (ä, à).
+2. **How many:** one visual at least every 800-1000px of text at desktop width (roughly every 1-2 H2 sections), and every page gets its **own hero art**. Never the same hero on two pages.
+3. **Pick the source per visual:**
+   | Need | Source | How |
+   |---|---|---|
+   | Hero art per page, promo card art, section illustrations (gift and coins for bonus, wallet for withdrawal, coins for payments, phone for login, trophy for VIP) | `chatgpt` | generated in ChatGPT in the user's Chrome (below) |
+   | Game tiles, provider logos, real lobby, cashier or app views of the brand | `screenshot` | from the original brand site in Chrome: `zoom` action on the area (sharper than a full screenshot), saved to `design/raw/` |
+   | Steps (signup, deposit, withdrawal), one big verified number, tier ladders, comparisons | `css` | copy a component from `design-starter/visuals/` to `design/visuals/<page>-<name>.html` |
+   | A row of real games inside a long section | `games` | tiles from `data/games.json`, no extra heading |
+4. **ChatGPT images** (Claude in Chrome, user's own ChatGPT account):
+   - Write one `style` line for the whole site from the original brand: background colour, accent colour, render style (3D cartoon, flat, photo-like). The same style goes in front of every prompt, so all images look like one set. Always end it with "no text, no letters, no logos, no people".
+   - `make_images.py <project> --prompts` prints the prompts still to make. Open chatgpt.com in a new tab, one prompt per message, wait for the image, download it. Ask the user once before the first download (filename, source chatgpt.com) and say how many files will follow.
+   - Never ask for real game characters, other brands' mascots or the brand's own logo or mascot; generic objects only. Never put words in the image: headings stay in HTML.
+   - Downloaded files land in the user's Downloads folder. Get access to that folder (device folder access tools) and stage the files into `design/raw/<id>.png`. If that is not possible, ask the user to attach them.
+   - Check each image before use: no garbled letters, matches the style, subject clear at small size. Regenerate a bad one once, then pick the best.
+5. **Sharpness:** every image file must be 2x its display size. `make_images.py` cover-crops and saves at 2x and warns when the source is too small. Game tiles from the original site: take the biggest version available (zoom screenshot), never upscale.
+6. **Words inside CSS visuals** (step titles, labels, numbers) come from the page's content file or `site.json` facts, word for word. No new claims. If the right words are missing, ask the content writer through a request.
+7. Run `python3 pipeline/scripts/make_images.py <project>` (it lists anything still missing), then build. The build warns about slots that match no section.
+
 ## 3. Self-check
-1. `python3 pipeline/scripts/design_check.py <project> --shots` must PASS (no FAIL: no overflow at 375 or 1366, no console errors, WebP images with alt, no `#` links, nofollow play links, 18+ and responsible-gambling links in the footer, one H1, no heading skips). REVIEW notes about web fonts not loading in the sandbox or links to pages not built yet are fine.
+1. `python3 pipeline/scripts/design_check.py <project> --shots` must PASS (no FAIL: no overflow at 375 or 1366, no console errors, WebP images with alt, no `#` links, nofollow play links, 18+ and responsible-gambling links in the footer, one H1, no heading skips, no stretch of main content over 1800px without a visual, no upscaled image). Fix REVIEW notes about soft images (under 2x) and stretches over 1200px too. Other REVIEW notes about web fonts not loading in the sandbox or links to pages not built yet are fine.
 2. Open the screenshots in `design/shots/` (top part of each page at both widths) next to the original brand's screenshots and compare: colours, buttons, header and menu, game rows, spacing. Fix what does not match or looks broken, cramped or templated, then rebuild and recheck.
 
 ## 4. Hand off
-Report: the design choices in 3-5 lines (colours, fonts, layout), whether they come from the original brand or are a placeholder, what still differs from the original, the check result, and the screenshot files. Step 5 (SEO) adds head tags and site files through `seo/`, and the build picks them up.
+Report: the design choices in 3-5 lines, the image plan per page (how many visuals from each source, any still missing) (colours, fonts, layout), whether they come from the original brand or are a placeholder, what still differs from the original, the check result, and the screenshot files. Step 5 (SEO) adds head tags and site files through `seo/`, and the build picks them up.
 
 ## Change requests
 QC sends template, CSS, image and link fixes in `qc/requests/design.md` (page | section | change | reason | status). Fix them in `design/` only, never in `content/` or `seo/`. A wording problem goes back to the content writer as a request. Rebuild, rerun `design_check.py`, and mark each row `done` or `refused: <reason>`.

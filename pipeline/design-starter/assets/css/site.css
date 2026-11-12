@@ -92,3 +92,17 @@ mark.verify{background:#ffe08a;color:#000;padding:0 3px}.fig{margin:20px 0}.fig 
   .main{padding:16px 14px 40px}.content-wrap{padding:20px}
 }
 @media (max-width:480px){.top-cta .btn-ghost{display:none}.btn{padding:9px 14px;font-size:14px}.btn-lg{padding:13px 22px;font-size:16px}.top-in{gap:8px;padding:0 10px}}
+/* in-content visuals (design/images.json). Work on light and dark themes: set --vis-accent to the brand colour */
+:root{--vis-accent:var(--c1,#2563eb);--vis-on:#fff}
+.vis{margin:28px 0}.hero-art img{width:100%;height:auto;display:block}
+.vis-games .track{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:10px;overflow-x:auto;padding:0;margin:0;list-style:none}
+.vis .v-steps{counter-reset:st;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;padding:0;margin:0;list-style:none}
+.v-steps li{counter-increment:st;position:relative;padding:48px 16px 16px;border-radius:var(--radius,12px);background:linear-gradient(160deg,color-mix(in srgb,var(--vis-accent) 16%,transparent),transparent 75%);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
+.v-steps li::before{content:counter(st);position:absolute;top:14px;left:16px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--vis-accent);color:var(--vis-on)}
+.v-steps-t{display:block;font-weight:800;margin-bottom:4px}.v-steps-d{display:block;font-size:14px;opacity:.75}
+.v-stat{display:flex;align-items:center;gap:22px;padding:22px 26px;border-radius:var(--radius,12px);background:radial-gradient(120% 140% at 0 0,color-mix(in srgb,var(--vis-accent) 22%,transparent),transparent 60%);border:1px solid color-mix(in srgb,currentColor 14%,transparent)}
+.v-stat-n{font-size:clamp(40px,7vw,64px);font-weight:900;line-height:1;color:var(--vis-accent)}
+.v-stat-l strong{display:block;font-size:18px}.v-stat-l span{opacity:.75;font-size:14px}
+.vis .v-tiers{display:flex;align-items:flex-end;gap:8px;padding:0;margin:0;list-style:none;min-height:150px}
+.v-tiers li{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;border-radius:var(--radius,12px) var(--radius,12px) 4px 4px;height:calc(50px + var(--lvl)*25px);background:linear-gradient(180deg,var(--vis-accent),color-mix(in srgb,var(--vis-accent) 45%,transparent));color:var(--vis-on)}
+.v-tiers b{font-size:14px}.v-tiers span{font-size:12px;opacity:.85}

@@ -11,6 +11,11 @@ Checks per page and width:
   - header carries no page links (only the play-path buttons and the logo)
   - every href with "#", every play link without rel=nofollow
   - h1 count and heading levels (no h4 before h1, no skips)
+  - image sharpness for 2x screens: file narrower than its display size = FAIL (upscaled),
+    narrower than 2x display size = REVIEW (soft on retina/phones)
+  - text walls: longest stretch of <main> at 1366px with no visual (image, svg, video or
+    [data-visual] block at least 80px tall): over 1200px = REVIEW, over 1800px = FAIL
+  - the same hero image on more than one page = REVIEW
 With --shots, saves full-page screenshots to <project>/design/shots/<page>-<width>.png.
 Exit 1 on any FAIL.
 """
@@ -62,6 +67,21 @@ JS = r"""
   r.footExt = foot ? [...foot.querySelectorAll('a[href^="http"]')].length : 0;
   r.internal = [...new Set([...document.querySelectorAll('main a[href^="/"]')].map(a => a.getAttribute('href').split('?')[0].replace(/\/$/,'') || '/'))];
   r.imgs = [...document.querySelectorAll('img')].map(i => ({src: i.getAttribute('src')||'', alt: i.getAttribute('alt'), w: i.getAttribute('width'), h: i.getAttribute('height')}));
+  r.res = [...document.querySelectorAll('main img, .hero img')].filter(i => i.naturalWidth && i.getBoundingClientRect().width >= 60)
+     .map(i => ({src: i.getAttribute('src'), n: i.naturalWidth, d: Math.round(i.getBoundingClientRect().width)}));
+  const main = document.querySelector('main');
+  if (main) {
+    const mb = main.getBoundingClientRect(), top0 = mb.top + scrollY, bot0 = mb.bottom + scrollY;
+    const vis = [...main.querySelectorAll('img, svg, video, canvas, picture, [data-visual]')]
+      .map(e => e.getBoundingClientRect()).filter(b => b.height >= 80 && b.width >= 80)
+      .map(b => [b.top + scrollY, b.bottom + scrollY]).sort((a, b) => a[0] - b[0]);
+    let cur = top0, gap = 0, at = 0;
+    for (const [t, bt] of vis) { if (t - cur > gap) { gap = t - cur; at = cur - top0; } cur = Math.max(cur, bt); }
+    if (bot0 - cur > gap) { gap = bot0 - cur; at = cur - top0; }
+    r.gap = Math.round(gap); r.gapAt = Math.round(at); r.mainH = Math.round(bot0 - top0);
+  }
+  const hi = document.querySelector('.hero img');
+  r.hero = hi ? hi.getAttribute('src') : '';
   r.playNoNofollow = [...document.querySelectorAll('a')].filter(a => (a.getAttribute('href')||'').replace(/\/$/,'') === PLAY && !(a.getAttribute('rel')||'').includes('nofollow')).length;
   return r;
 }
@@ -90,6 +110,7 @@ def main():
             if f.endswith(".png"):
                 os.remove(os.path.join(sd, f))
     fails, reviews = [], []
+    heroes = {}
     with sync_playwright() as p:
         b = p.chromium.launch()
         for width in (375, 1366):
@@ -131,6 +152,20 @@ def main():
                         reviews.append(f"{url}: links to pages not built yet: {', '.join(missing[:6])}")
                     if r["playNoNofollow"]:
                         fails.append(f"{url}: {r['playNoNofollow']} play links without nofollow")
+                    up = [i for i in r.get("res", []) if i["n"] < i["d"]]
+                    soft = [i for i in r.get("res", []) if i["d"] <= i["n"] < 2 * i["d"]]
+                    if up:
+                        fails.append(f"{url}: {len(up)} image(s) upscaled (file narrower than shown), e.g. "
+                                     + ", ".join(f"{i['src']} {i['n']}px shown at {i['d']}px" for i in up[:3]))
+                    if soft:
+                        reviews.append(f"{url}: {len(soft)} image(s) soft on 2x screens (file under 2x display width), e.g. "
+                                       + ", ".join(f"{i['src']} {i['n']}px for {i['d']}px (needs {2 * i['d']}px)" for i in soft[:3]))
+                    if r.get("gap", 0) > 1200:
+                        (fails if r["gap"] > 1800 else reviews).append(
+                            f"{url}: {r['gap']}px of main content without any visual (starts {r['gapAt']}px into main, main is {r['mainH']}px); "
+                            "add an image or a CSS visual block (design/images.json)")
+                    if r.get("hero"):
+                        heroes.setdefault(r["hero"], []).append(url)
                     for i in r["imgs"]:
                         if i["src"] and not i["src"].split("?")[0].lower().endswith((".webp", ".svg")):
                             fails.append(f"{url}: non-WebP image {i['src']}")
@@ -145,6 +180,9 @@ def main():
             ctx.close()
         b.close()
     srv.shutdown()
+    for src, urls in heroes.items():
+        if len(urls) > 1:
+            reviews.append(f"same hero image on {len(urls)} pages ({', '.join(urls[:5])}): {src}; give each page its own hero art")
     verdict = "FAIL" if fails else ("REVIEW" if reviews else "PASS")
     print(f"{verdict} | {len(pages)} pages x 2 widths")
     for x in fails:

@@ -349,6 +349,23 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
         sev = "REVIEW" if wc >= target * 0.9 else "FAIL"
         rep.add("Word count", sev, path_url, f"{wc} words ({page_type} target {target}+)")
 
+    # Text walls: longest run of words in <main> with no visual (img, svg, video, picture, [data-visual])
+    main = soup.find("main") or soup.body
+    if main:
+        from bs4 import NavigableString, Tag
+        run = longest = 0
+        for node in main.descendants:
+            if isinstance(node, Tag):
+                if node.name in ("img", "svg", "video", "picture", "canvas") or node.has_attr("data-visual"):
+                    run = 0
+            elif isinstance(node, NavigableString) and node.parent and node.parent.name not in ("script", "style"):
+                run += len(node.split())
+                longest = max(longest, run)
+        wall = cfg.get("text_wall_words", [700, 1200])
+        if longest > wall[0]:
+            rep.add("Visual breaks", "FAIL" if longest > wall[1] and page_type != "mandatory" else "REVIEW", path_url,
+                    f"{longest} words in a row without any image or visual block (add one every ~500-700 words)")
+
     # 17. Age-gate popup (not wanted)
     if re.search(r"age[-_ ]?gate|age[-_ ]?verif|are you (over )?18", raw, re.I):
         rep.add("No age gate popup", "REVIEW", path_url, "possible age-gate markup found")
@@ -558,7 +575,7 @@ CHECK_GROUPS = [
                        "Clean URLs", "Broken internal link", "Login/Register CTA -> /play"]),
     ("Voice & AI signals", ["No em dashes", "No 2nd person (\"you\")", "AI phrase", "Brand voice",
                              "Forbidden name", "Placeholders / dev notes"]),
-    ("Compliance & Assets", ["Schema", "Images WebP", "Image alt", "18+ badge in footer",
+    ("Compliance & Assets", ["Schema", "Images WebP", "Image alt", "Visual breaks", "18+ badge in footer",
                               "18+ disclosure on home", "No age gate popup"]),
 ]
 

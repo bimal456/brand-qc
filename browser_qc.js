@@ -92,6 +92,15 @@ for (const p of pages) {
   const mainEl = body.cloneNode(true); mainEl.querySelectorAll("header,nav,footer").forEach(e => e.remove());
   const words = wc(mainEl.textContent); const tp = typeOf(p); const target = CFG.words[tp];
   if (words < target * 0.9) F.push(`words ${words}/${target}`); else if (words < target) R.push(`words ${words}/${target}`);
+  { // text wall: longest run of words in main with no visual
+    const m = d.querySelector("main") || d.body; let run = 0, longest = 0;
+    const tw = d.createTreeWalker(m, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+      if (n.nodeType === 1) { if (/^(IMG|SVG|VIDEO|PICTURE|CANVAS)$/i.test(n.tagName) || n.hasAttribute("data-visual")) run = 0; }
+      else if (!/^(SCRIPT|STYLE)$/.test(n.parentNode.tagName)) { run += wc(n.textContent); longest = Math.max(longest, run); }
+    }
+    if (longest > 1200 && typeOf(p) !== "mandatory") F.push(`text wall ${longest} words`); else if (longest > 700) R.push(`text wall ${longest} words`);
+  }
   const em = (vis + title + desc).split("—").length - 1; if (em) F.push(`${em} em dash`);
   const sp = (CFG.secondPerson[lang] || CFG.secondPerson.en).map(w => [w, (low.match(new RegExp("(?<![\\p{L}])" + w + "(?![\\p{L}])", "gu")) || []).length]).filter(x => x[1]);
   const spT = sp.reduce((a, x) => a + x[1], 0); if (spT) (spT > 3 ? F : R).push(`2nd person ${spT} (${sp.sort((a, b) => b[1] - a[1]).slice(0, 4).map(x => x.join("=")).join(",")})`);
