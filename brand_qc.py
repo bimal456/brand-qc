@@ -276,7 +276,13 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
         # CTA destinations
         tl = text.lower()
         if any(re.search(r"\b" + re.escape(w) + r"\b", tl) for w in cfg["cta_words"]):
-            if (urlparse(href).path.rstrip("/") or "/") not in cfg["play_paths"]:
+            dest = urlparse(href).path.rstrip("/") or "/"
+            cls = " ".join(a.get("class") or []).lower()
+            looks_like_button = any(k in cls for k in ("btn", "button", "cta"))
+            # A plain text/menu link to a real content page on the site (e.g. a /login guide page)
+            # is an internal link, not a Login/Register CTA. Button-styled links are still checked.
+            to_content_page = not is_external and dest in site_files and dest not in cfg["play_paths"]
+            if dest not in cfg["play_paths"] and not (to_content_page and not looks_like_button):
                 rep.add("Login/Register CTA -> /play", "FAIL", path_url, f"\"{text[:40]}\" points to {href}")
 
     # 8. Em dashes
@@ -313,7 +319,11 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
         if nm.lower().strip() and re.search(r"(?<!\w)" + re.escape(nm.strip().lower()) + r"(?!\w)", raw.lower()):
             rep.add("Forbidden name", "FAIL", path_url, f"\"{nm.strip()}\" found (line {line_of(raw, nm.strip())})")
     for ph in cfg["forbidden_voice"]:
-        if ph in vis_low:
+        # whole-phrase match, and "information only" must not be part of "personal information only for..."
+        pat = r"(?<!\w)" + re.escape(ph) + r"(?!\w)"
+        if ph == "information only":
+            pat = r"(?<!personal )(?<!your )(?<!the )" + pat + r"(?!\s+(?:for|to|when|where|with|as|if|in)\b)"
+        if re.search(pat, vis_low):
             rep.add("Brand voice", "FAIL", path_url, f"\"{ph}\" -> {snippet(vis, ph)}")
 
     # 13. Schema: present, but no Review / AggregateRating
