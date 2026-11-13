@@ -68,6 +68,11 @@ DEFAULT_CONFIG = {
         "el": ["εσύ", "σας", "σου"],
         "pt": ["você", "tu", "seu", "sua"],
     },
+    # phrases that contain a second-person word but do not address the reader
+    # (removed before the second-person count), per <html lang>
+    "second_person_ignore": {
+        "fr": ["rendez-vous", "donne le ton", "le ton est", "ton sur ton"],
+    },
     "mandatory_pages": {
         "responsible gambling": ["responsible", "verantwoord", "verantwortung", "jeu-responsable",
                                   "gioco-responsabile", "ansvarsfullt", "vastuullinen", "odpowiedzialn", "jeu-responsable", "spelansvar",
@@ -284,9 +289,12 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
 
     # 9. Second person (reader addressed as "you")
     words = cfg["second_person"].get(lang, cfg["second_person"]["en"])
+    sp_text = vis_low
+    for ph in cfg.get("second_person_ignore", {}).get(lang, []):
+        sp_text = sp_text.replace(ph.lower(), " ")
     hits = defaultdict(int)
     for w in words:
-        hits[w] = len(re.findall(r"(?<!\w)" + re.escape(w) + r"(?!\w)", vis_low))
+        hits[w] = len(re.findall(r"(?<!\w)" + re.escape(w) + r"(?!\w)", sp_text))
     total = sum(hits.values())
     if total:
         top = ", ".join(f"{k}={v}" for k, v in sorted(hits.items(), key=lambda x: -x[1]) if v)[:120]
