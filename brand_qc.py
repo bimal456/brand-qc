@@ -36,6 +36,7 @@ DEFAULT_CONFIG = {
     "meta_description": [150, 160],
     "length_tolerance": 5,          # outside range by <= this many chars = REVIEW, more = FAIL
     "play_paths": ["/play"],          # affiliate redirect path(s); add "/pelaa" etc. per site
+    "age_label": "18+",             # minimum-age label checked in meta description, footer and home (e.g. "19+" for Canada)
     "cta_words": ["login", "log in", "register", "sign up", "inloggen", "registreren",
                    "anmelden", "registrieren", "connexion", "inscription", "accedi",
                    "registrati", "logga in", "kirjaudu", "rekisteröidy", "zaloguj",
@@ -156,6 +157,7 @@ class Report:
 # Page-level checks
 # --------------------------------------------------------------------------
 def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_hosts):
+    age = cfg.get("age_label", "18+")
     tol = cfg["length_tolerance"]
     vis = visible_text(soup)
     vis_low = vis.lower()
@@ -193,8 +195,8 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
         if not (lo <= len(desc) <= hi):
             sev = "REVIEW" if (lo - tol) <= len(desc) <= (hi + tol) else "FAIL"
             rep.add("Meta description", sev, path_url, f"{len(desc)} chars (target {lo}-{hi})")
-        if "18+" not in desc:
-            rep.add("Meta description 18+", "FAIL", path_url, "\"18+\" missing in meta description")
+        if age not in desc:
+            rep.add("Meta description 18+", "FAIL", path_url, f"\"{age}\" missing in meta description")
 
     # 4. Canonical / OG / Twitter consistency
     can = soup.find("link", rel=lambda r: r and "canonical" in (r.split() if isinstance(r, str) else r))
@@ -337,10 +339,10 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
 
     # 15. 18+ visible (footer)
     footer = soup.find("footer")
-    if not footer or "18+" not in footer.get_text():
-        rep.add("18+ badge in footer", "FAIL", path_url, "no 18+ in footer")
-    if page_type == "home" and "18+" not in main_text(soup):
-        rep.add("18+ disclosure on home", "REVIEW", path_url, "no 18+ line in homepage body")
+    if not footer or age not in footer.get_text():
+        rep.add("18+ badge in footer", "FAIL", path_url, f"no {age} in footer")
+    if page_type == "home" and age not in main_text(soup):
+        rep.add("18+ disclosure on home", "REVIEW", path_url, f"no {age} line in homepage body")
 
     # 16. Word count
     wc = word_count(main_text(soup))

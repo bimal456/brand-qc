@@ -7,6 +7,7 @@
 
 const CFG = {
   playPaths: ["/play"],                // add "/pelaa" etc. if the site uses it
+  ageLabel: "18+",                     // minimum-age label, e.g. "19+" for Canada
   allowedExternal: [],                 // geo RG domains, e.g. ["peluuri.fi","tiltti.fi"]
   words: { home: 5000, mandatory: 1000, other: 3000 },
   mandatorySlugs: {
@@ -55,7 +56,7 @@ for (const p of pages) {
   let prev = 0; d.querySelectorAll("h1,h2,h3,h4,h5,h6").forEach(h => { const l = +h.tagName[1]; if (prev && l > prev + 1) F.push(`skip H${prev}>H${l}`); prev = l; });
   if (title.length < 50 || title.length > 65) F.push(`title ${title.length}`); else if (title.length < 55 || title.length > 60) R.push(`title ${title.length}`);
   if (desc.length < 145 || desc.length > 165) F.push(`desc ${desc.length}`); else if (desc.length < 150 || desc.length > 160) R.push(`desc ${desc.length}`);
-  if (!desc.includes("18+")) F.push("no 18+ in desc");
+  if (!desc.includes(CFG.ageLabel)) F.push("no " + CFG.ageLabel + " in desc");
   const can = d.querySelector("link[rel=canonical]")?.getAttribute("href") || "";
   if (!can) F.push("no canonical");
   else { const cp = new URL(can, origin).pathname; if (cp !== "/" && cp.endsWith("/")) R.push("canonical trailing slash"); if (norm(cp) !== norm(p)) R.push("canonical path differs"); }
@@ -115,7 +116,7 @@ for (const p of pages) {
   const nw = imgs.filter(i => { const s = (i.getAttribute("src") || "").split("?")[0]; return s && !/\.webp$/i.test(s) && !s.startsWith("data:") && !/\.svg$/i.test(s); }).length;
   if (nw) F.push(`${nw} non-WebP img`);
   const na = imgs.filter(i => !i.getAttribute("alt")).length; if (na) R.push(`${na} img no alt`);
-  const ft = d.querySelector("footer"); if (!ft || !ft.textContent.includes("18+")) F.push("no 18+ footer");
+  const ft = d.querySelector("footer"); if (!ft || !ft.textContent.includes(CFG.ageLabel)) F.push("no " + CFG.ageLabel + " footer");
   if (/age[-_ ]?gate|age[-_ ]?verif/i.test(raw)) R.push("age gate markup?");
   fails += F.length; reviews += R.length;
   lines.push(`${p} [${tp}, ${words}w, t${title.length}, d${desc.length}]\n  FAIL: ${F.join(" | ") || "-"}\n  REVIEW: ${R.join(" | ") || "-"}`);

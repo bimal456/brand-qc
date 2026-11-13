@@ -30,10 +30,10 @@ Saari keys `configs/example-all-keys.json` aur script ke `DEFAULT_CONFIG` mein h
 
 ## Checks
 - Structure: single H1, heading skips, word counts (home 5k / mandatory 1k / other 3k), orphan pages, mandatory pages (RG, terms, privacy, about, contact) per language root
-- Meta & indexing: title 55-60, description 150-160 + "18+", canonical, og/twitter match, hreflang (self + x-default), duplicate titles/descriptions, sitemap vs pages, robots.txt, HTTP status (live mode), worker files that may rewrite meta
+- Meta & indexing: title 55-60, description 150-160 + age label ("18+" by default, `age_label` in config, e.g. "19+" for Canada), canonical, og/twitter match, hreflang (self + x-default), duplicate titles/descriptions, sitemap vs pages, robots.txt, HTTP status (live mode), worker files that may rewrite meta
 - Links & CTAs: no "#" in href, external nofollow, play CTA nofollow, Login/Register -> play path, clean URLs, broken internal links, RG allowlist
 - Voice & AI signals: em dashes, reader addressed as "you" (per `<html lang>`, incl. Finnish verb forms), AI phrases, forbidden brand-voice lines, forbidden names, placeholders and dev comments
-- Compliance & assets: no review/rating schema, WebP images, alt text, 18+ in footer, 18+ on home, age-gate markup
+- Compliance & assets: no review/rating schema, WebP images, alt text, age label in footer and on home, age-gate markup
 
 ## Not covered (manual / AI check)
 Entity density, topical coverage vs brief, vague claims, licence-claim verification, bonus/T&C accuracy, templated section patterns.
