@@ -1,3 +1,9 @@
 {
-  "allowed_external_domains": ["loketkansspel.nl", "agog.nl", "kansspelautoriteit.nl"]
+  "allowed_external_domains": [
+    "loketkansspel.nl",
+    "agog.nl",
+    "kansspelautoriteit.nl",
+    "cruksregister.nl",
+    "openovergokken.nl"
+  ]
 }
