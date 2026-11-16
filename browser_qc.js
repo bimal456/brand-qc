@@ -87,7 +87,11 @@ for (const p of pages) {
     if (/\.html$/.test(u.pathname)) F.push("html link " + u.pathname);
     const isPlay = CFG.playPaths.includes(np);
     if (isPlay && !rel.includes("nofollow")) playNF++;
-    if (/login|log in|register|sign up|kirjaudu|rekisteröidy|pelaa nyt|anmelden|registrieren|connexion|inscription|inloggen|registreren|accedi|registrati/i.test(t) && !isPlay) cta.push(`${t.slice(0, 20)}>${np}`);
+    // register links always go to play; login only when it is a CTA button (menu/footer text links may open the login page)
+    const btn = [a, a.parentElement].some(el => el && (el.tagName === "BUTTON" || el.getAttribute("role") === "button" || /(^|[\s_-])(btn|button|cta)([\s_-]|$)/i.test(el.className || ""))) || !!a.querySelector("button");
+    const isReg = /register|sign up|rekisteröidy|registrieren|inscription|registreren|registrati|registrera|zarejestruj|pelaa nyt/i.test(t);
+    const isLogin = /login|log in|sign in|kirjaudu|anmelden|connexion|inloggen|accedi|logga in|zaloguj/i.test(t);
+    if ((isReg || (isLogin && btn)) && !isPlay) cta.push(`${btn ? "button " : ""}${t.slice(0, 20)}>${np}`);
   });
   if (hash) F.push(`${hash} # hrefs`);
   if (extNF.size) F.push("ext not nofollow: " + [...extNF].join(","));

@@ -36,10 +36,14 @@ DEFAULT_CONFIG = {
     "meta_description": [150, 160],
     "length_tolerance": 5,          # outside range by <= this many chars = REVIEW, more = FAIL
     "play_paths": ["/play"],          # affiliate redirect path(s); add "/pelaa" etc. per site
-    "cta_words": ["login", "log in", "register", "sign up", "inloggen", "registreren",
-                   "anmelden", "registrieren", "connexion", "inscription", "accedi",
-                   "registrati", "logga in", "kirjaudu", "rekisteröidy", "zaloguj",
-                   "zarejestruj", "σύνδεση", "εγγραφή"],
+    # Register / sign-up links always go to the play path. Login words go to the play path only on
+    # CTA buttons (class btn/button/cta, role=button, or inside a <button>); a plain menu, side-menu
+    # or footer text link "Login" may open the site's own login page.
+    "cta_words": ["register", "sign up", "registreren", "registrieren", "inscription", "registrati",
+                  "rekisteröidy", "zarejestruj", "εγγραφή", "registrera", "inscríbete", "registe"],
+    "login_cta_words": ["login", "log in", "sign in", "inloggen", "anmelden", "connexion", "accedi",
+                        "logga in", "kirjaudu", "zaloguj", "σύνδεση", "entrar", "iniciar sesión"],
+    "button_class_re": r"(^|[\s_-])(btn|button|cta)([\s_-]|$)",
     "allowed_external_domains": [],  # geo responsible-gambling resources, e.g. ["joueurs-info-service.fr"]
     "forbidden_names": ["KAP Digital", "KAP "],
     "forbidden_voice": ["we are not the operator", "information only", "informational site only",
@@ -196,6 +200,17 @@ STOP_FIRST = {"how", "what", "why", "which", "when", "the", "hoe", "wat", "come"
               "comment", "quel", "quels", "quelle", "hur", "vad", "jak", "como"}
 
 
+def is_button(a, cfg):
+    """A CTA button: the link or its parent has a btn/button/cta class, role=button, or sits in a <button>."""
+    pat = re.compile(cfg.get("button_class_re", r"(^|[\s_-])(btn|button|cta)([\s_-]|$)"), re.I)
+    for el in (a, a.parent):
+        if el is None or not hasattr(el, "get"):
+            continue
+        if el.name == "button" or (el.get("role") or "") == "button" or pat.search(" ".join(el.get("class", []))):
+            return True
+    return bool(a.find("button"))
+
+
 def forbidden_term_hits(text, cfg):
     """{group: [matched words]} for cfg['forbidden_terms'], matched from the start of a word."""
     low, out = text.lower(), {}
@@ -344,11 +359,14 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
                 rep.add("Broken internal link", "FAIL", path_url, f"{href} has no matching page")
             if norm in cfg["play_paths"] and "nofollow" not in rel:
                 rep.add("Nofollow CTA", "FAIL", path_url, f"play CTA not nofollow (\"{text[:40]}\")")
-        # CTA destinations
+        # CTA destinations: register links always, login only when it is a button
         tl = text.lower()
-        if any(re.search(r"\b" + re.escape(w) + r"\b", tl) for w in cfg["cta_words"]):
-            if (urlparse(href).path.rstrip("/") or "/") not in cfg["play_paths"]:
-                rep.add("Login/Register CTA -> /play", "FAIL", path_url, f"\"{text[:40]}\" points to {href}")
+        dest = urlparse(href).path.rstrip("/") or "/"
+        is_reg = any(re.search(r"(?<!\w)" + re.escape(w), tl) for w in cfg["cta_words"])
+        is_login = any(re.search(r"(?<!\w)" + re.escape(w) + r"(?!\w)", tl) for w in cfg["login_cta_words"])
+        if (is_reg or (is_login and is_button(a, cfg))) and dest not in cfg["play_paths"]:
+            rep.add("Login/Register CTA -> /play", "FAIL", path_url,
+                    f"{'button' if is_button(a, cfg) else 'link'} \"{text[:40]}\" points to {href}")
 
     # 8. Em dashes
     n_em = vis.count(EM_DASH) + (title.count(EM_DASH) + desc.count(EM_DASH))
