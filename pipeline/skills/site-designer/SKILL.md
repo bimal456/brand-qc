@@ -29,6 +29,7 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
    - Labels and the footer legal line never mention an operator, licence or regulator. The login label is the geo's normal login word (Login, Accedi, Kirjaudu), never "Access Account".
    - `theme.json`: brand name, logo token (inline SVG or `<img>` with width and height), labels per geo (any extra label key becomes a template token), `toc` on or off.
 2. Images: follow section 2b. No images of real people.
+   **Favicon:** take the brand's square icon (the original site's favicon or app icon, or the logo mark cropped square, at least 180px) and run `python3 pipeline/scripts/make_images.py <project> --favicon <image>`. It writes `favicon.ico`, `favicon-32.png` and `apple-touch-icon.png` (set `"icon_bg"` in `image_plan.json` for the touch icon background). The build adds the icon tags to every page and refuses a final build without them.
 3. Rules from the user:
    - Look of the original brand, unique per brand; never the same template with a new colour. No badge, pill or checkmark overload, no identical repeated card blocks, no letter-badge placeholder logos.
    - No accordion FAQ unless site.json allows it. No age-gate popup.

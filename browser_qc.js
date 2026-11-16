@@ -141,6 +141,7 @@ for (const p of pages) {
   const nw = imgs.filter(i => { const s = (i.getAttribute("src") || "").split("?")[0]; return s && !/\.webp$/i.test(s) && !s.startsWith("data:") && !/\.svg$/i.test(s); }).length;
   if (nw) F.push(`${nw} non-WebP img`);
   const na = imgs.filter(i => !i.getAttribute("alt")).length; if (na) R.push(`${na} img no alt`);
+  if (!d.querySelector('link[rel~="icon"]')) F.push("no favicon");
   const ft = d.querySelector("footer"); if (!ft || !ft.textContent.includes("18+")) F.push("no 18+ footer");
   if (/age[-_ ]?gate|age[-_ ]?verif/i.test(raw)) R.push("age gate markup?");
   fails += F.length; reviews += R.length;

@@ -196,6 +196,17 @@ def main():
     if os.path.isdir(seo_files):
         for f in os.listdir(seo_files):
             shutil.copy(os.path.join(seo_files, f), build)
+    # favicon: design/assets/favicon.ico (+ favicon-32.png, apple-touch-icon.png) made by make_images.py --favicon
+    fav_ico = os.path.join(dz, "assets", "favicon.ico")
+    if os.path.exists(fav_ico):
+        shutil.copy(fav_ico, os.path.join(build, "favicon.ico"))
+    fav_tags = ""
+    if os.path.exists(fav_ico):
+        fav_tags = '<link rel="icon" href="/favicon.ico" sizes="any">'
+        if os.path.exists(os.path.join(dz, "assets", "favicon-32.png")):
+            fav_tags += '\n<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">'
+        if os.path.exists(os.path.join(dz, "assets", "apple-touch-icon.png")):
+            fav_tags += '\n<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">'
 
     problems, built, skipped = [], [], set()
     no_seo, no_hreflang = [], []
@@ -318,6 +329,8 @@ def main():
             out = os.path.join(build, out_path(g["prefix"], meta.get("slug", "/")))
             os.makedirs(os.path.dirname(out), exist_ok=True)
             page_html = fill(tpl("base"), ctx)
+            if fav_tags and 'rel="icon"' not in page_html:
+                page_html = re.sub(r"</head>", fav_tags + "\n</head>", page_html, count=1, flags=re.I)
             if 'hreflang="' not in page_html:
                 no_hreflang.append(out_path(g["prefix"], meta.get("slug", "/")))
             open(out, "w", encoding="utf-8").write(page_html)
@@ -327,6 +340,22 @@ def main():
     if skipped:
         print("Skipped (no template or data):", ", ".join(sorted(skipped)))
     blocked = False
+    if not fav_tags:
+        print("No favicon: run make_images.py <project> --favicon <logo or icon image>")
+        blocked = True
+    sm_p = os.path.join(build, "sitemap.xml")
+    if not os.path.exists(sm_p) or not os.path.exists(os.path.join(build, "robots.txt")):
+        print("No sitemap.xml / robots.txt in the build -> run seo_build.py <project> first")
+        blocked = True
+    else:
+        sm_txt = open(sm_p, encoding="utf-8").read()
+        locs = set(re.findall(r"<loc>\s*https?://[^/<]+([^<\s]*)\s*</loc>", sm_txt))
+        locs = {(l.rstrip("/") or "/") for l in locs}
+        page_urls = {("/" + b[:-5]).replace("/index", "") or "/" for b in built}
+        missing_sm = sorted(u for u in page_urls if (u.rstrip("/") or "/") not in locs)
+        if missing_sm:
+            print("Pages missing from sitemap.xml:", ", ".join(missing_sm), "-> rerun seo_build.py")
+            blocked = True
     if no_seo:
         print("No SEO head (hreflang, og, schema) for:", ", ".join(no_seo), "-> run seo_build.py <project> first")
         blocked = True

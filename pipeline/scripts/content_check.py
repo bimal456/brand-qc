@@ -20,6 +20,7 @@ not appear in a verified site.json fact, repeated sentence openers, paragraph le
 Exit code 1 when any FAIL.
 """
 import argparse
+import difflib
 import json
 import os
 import re
@@ -56,8 +57,18 @@ DEV_NOTES = [
 ]
 
 
+def norm_h(t):
+    return re.sub(r"[^\w ]", "", re.sub(r"\s+", " ", t.lower())).strip()
+
+
+def section_texts(body):
+    """[(heading, text until the next heading of any level)]"""
+    parts = re.split(r"^(#{2,6})\s+(.*)$", body, flags=re.M)
+    return [(parts[i + 1], parts[i + 2]) for i in range(1, len(parts) - 2, 3)]
+
+
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")))
-from brand_qc import DEFAULT_CONFIG as QC, forbidden_term_hits  # noqa: E402  shared word lists
+from brand_qc import DEFAULT_CONFIG as QC, forbidden_term_hits, SEQ_WORDS, FLUFF_HEADINGS, STOP_FIRST  # noqa: E402
 
 
 def load(path):
@@ -144,7 +155,7 @@ def main():
     scan = " ".join([body, t, d, meta.get("h1", ""), meta.get("nav_label", "")])
     for group, hits in forbidden_term_hits(scan, QC).items():
         F.append(f"forbidden {group} word(s): " + ", ".join(f"'{h}'" for h in hits[:5])
-                 + " (remove the sentence or rewrite it without the word; no operator or licence talk)")
+                 + " (remove the sentence or rewrite it without the word)")
     nums = []
     for pat in QC["licence_number_patterns"]:
         for m in re.finditer(pat, scan, re.I if "no|nr" in pat else 0):
@@ -158,12 +169,12 @@ def main():
             "regulator named: " + ", ".join(regs[:5]) + " (only as a help resource on the responsible-gambling page)")
     for ph in QC["login_bad_phrases"]:
         if ph in scan.lower():
-            F.append(f"'{ph}' used; write the normal login word ({', '.join(QC['login_words'].get(lang, ['login'])[:2])})")
+            F.append(f"'{ph}' used; write the normal login word ({', '.join(QC['logiwc'].get(lang, ['login'])[:2])})")
     if any(w in meta.get("slug", "").lower() for w in QC["login_slug_words"]):
-        ok = QC["login_words"].get(lang, []) + QC["login_words"]["en"]
+        ok = QC["logiwc"].get(lang, []) + QC["logiwc"]["en"]
         for label, txt in (("h1", meta.get("h1", "")), ("title", t)):
             if not any(w in txt.lower() for w in ok):
-                F.append(f"login page {label} has no login word ({', '.join(QC['login_words'].get(lang, ['login'])[:2])}): '{txt[:60]}'")
+                F.append(f"login page {label} has no login word ({', '.join(QC['logiwc'].get(lang, ['login'])[:2])}): '{txt[:60]}'")
 
     for dn in DEV_NOTES:
         if dn in low:
@@ -185,6 +196,56 @@ def main():
         o_h2 = re.findall(r"\*\*H2:\s*(.+?)\*\*", o)
         if o_h2 and len(h2) < len(o_h2):
             F.append(f"H2 count {len(h2)} < outline {len(o_h2)}")
+        # every H2/H3 must come from the approved outline (no invented headings)
+        o_heads = [norm_h(x) for x in re.findall(r"\*\*H2:\s*(.+?)\*\*", o) + re.findall(r"H3:\s*(.+?)(?:\s+-\s|\*|$)", o, flags=re.M)]
+        if o_heads:
+            extra = [txt for h, txt in heads if len(h) in (2, 3)
+                     and not any(difflib.SequenceMatcher(None, norm_h(txt), oh).ratio() >= 0.75 for oh in o_heads)]
+            if extra:
+                F.append(f"{len(extra)} heading(s) not in the approved outline: " + "; ".join(f"'{x[:45]}'" for x in extra[:4]))
+        # section formats from the outline: "format: steps | list | table | paragraphs"
+        need = {}
+        for line in o.splitlines():
+            m = re.search(r"(?:\*\*H2:\s*(.+?)\*\*|H3:\s*(.+?)(?:\s+-\s|$)).*?format:\s*(steps|list|table|paragraphs)", line, re.I)
+            if m:
+                need[norm_h(m.group(1) or m.group(2))] = m.group(3).lower()
+        secs = section_texts(body_np)
+        for title, fmt in need.items():
+            st = next((txt for hd, txt in secs if difflib.SequenceMatcher(None, norm_h(hd), title).ratio() >= 0.75), None)
+            if st is None or fmt == "paragraphs":
+                continue
+            ok = {"steps": r"^\s*\d+[.)]\s", "list": r"^\s*(?:[-*]|\d+[.)])\s", "table": r"^\s*\|"}[fmt]
+            if not re.search(ok, st, flags=re.M):
+                F.append(f"section '{title[:40]}' must be {fmt} (outline) but has none")
+
+    # 6b structure: steps written as paragraphs, too few lists/tables, slogan headings
+    seq = sorted(set(SEQ_WORDS.get(lang, []) + SEQ_WORDS["en"]))
+    for para in re.split(r"\n\s*\n", re.sub(r"^#{1,6}\s.*$", "\n", body_np, flags=re.M)):
+        if not para.strip() or para.lstrip().startswith(("|", "-", "*")) or re.match(r"\s*\d+[.)]\s", para):
+            continue
+        pl = para.lower()
+        hits = sum(len(re.findall(r"(?<!\w)" + re.escape(w) + r"(?!\w)", pl)) for w in seq)
+        if hits >= 3:
+            F.append(f"steps written as a paragraph ({hits} sequence words), make it a numbered list: '{para.strip()[:60]}...'")
+    blocks = len(re.findall(r"(?:^\s*(?:[-*]|\d+[.)])\s.*\n?)+", body_np, flags=re.M)) + len(re.findall(r"(?:^\s*\|.*\n?)+", body_np, flags=re.M))
+    per = 1000 if meta.get("type") == "mandatory" else 600
+    if wc > per and blocks < wc // per:
+        F.append(f"only {blocks} list/table block(s) for {wc} words; need at least {wc // per} (one per {per} words): steps, criteria and comparisons go in lists or tables")
+    sib = {}
+    parent = ""
+    for h, txt in heads:
+        if len(h) == 2:
+            parent = txt
+        if len(h) in (2, 3):
+            first = re.sub(r"[^\w]", "", txt.split()[0].lower()) if txt.split() else ""
+            if first and len(first) > 2 and first not in STOP_FIRST:
+                sib.setdefault((len(h), parent if len(h) == 3 else "", first), []).append(txt)
+    for (lvl, _, first), hs in sib.items():
+        if len(hs) >= 3:
+            F.append(f"templated slogan headings ({len(hs)} H{lvl} start with '{first}'): " + "; ".join(f"'{x[:30]}'" for x in hs[:4]))
+    for h, txt in heads:
+        if any(re.search(p_, txt, re.I) for p_ in FLUFF_HEADINGS):
+            F.append(f"brand-slogan heading, not a search topic: '{txt[:60]}'")
 
     # 7 numbers vs verified facts
     verified = " ".join(f["claim"] for f in site.get("facts", []) if f.get("source"))

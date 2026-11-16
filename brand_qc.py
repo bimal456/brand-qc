@@ -51,6 +51,8 @@ DEFAULT_CONFIG = {
                      "ylläpitäjä", "exploitant", "beheerd door", "betreiber", "betrieben von",
                      "opérateur", "exploité par", "operatör", "drivs av", "operador", "operado por"],
         "licence": ["licen", "lisens", "lizenz", "vergunning", "concessione"],
+        "independent": ["independent", "onafhankelijk", "unabhängig", "indépendant", "indipendent", "riippumat",
+                        "oberoende", "niezależn", "independente", "ανεξάρτητ"],
         "glance": ["glance", "colpo d'occhio", "silmäyksellä", "oogopslag", "auf einen blick",
                    "coup d'œil", "coup d'oeil", "ögonkast", "rzut oka"],
     },
@@ -170,6 +172,28 @@ def word_count(text):
 def line_of(raw, needle):
     idx = raw.lower().find(needle.lower())
     return raw.count("\n", 0, idx) + 1 if idx >= 0 else None
+
+
+# sequence words: 3+ in one paragraph means the paragraph is really a list of steps
+SEQ_WORDS = {
+    "en": ["first", "firstly", "then", "next", "after that", "afterwards", "finally", "step", "second", "third"],
+    "nl": ["eerst", "daarna", "vervolgens", "tot slot", "ten slotte", "stap", "als eerste", "dan"],
+    "it": ["prima", "poi", "quindi", "successivamente", "infine", "passo", "per prima cosa", "dopodiché"],
+    "fi": ["ensin", "sitten", "seuraavaksi", "lopuksi", "vaihe", "tämän jälkeen", "aluksi"],
+    "de": ["zuerst", "dann", "danach", "anschließend", "schließlich", "schritt", "zunächst"],
+    "fr": ["d'abord", "ensuite", "puis", "enfin", "étape", "premièrement", "après cela"],
+    "sv": ["först", "sedan", "därefter", "slutligen", "steg", "till sist"],
+    "pl": ["najpierw", "następnie", "potem", "na koniec", "krok"],
+    "pt": ["primeiro", "depois", "em seguida", "por fim", "passo"],
+    "el": ["πρώτα", "μετά", "στη συνέχεια", "τέλος", "βήμα"],
+}
+# headings that sell a slogan instead of answering a search ("What Fast Means at X", "Our approach")
+FLUFF_HEADINGS = [r"^what .{1,30} means", r"\bour (approach|philosophy|promise|mission|story|dna)\b", r"^the .{1,20} way$",
+                  r"^wat .{1,30} betekent", r"^cosa significa", r"^mitä .{1,30} tarkoittaa", r"^was .{1,30} bedeutet",
+                  r"^ce que .{1,30} signifie", r"^vad .{1,30} betyder", r"\bonze (aanpak|filosofie|belofte)\b",
+                  r"\bla nostra (filosofia|promessa)\b", r"\bunsere (philosophie|mission)\b"]
+STOP_FIRST = {"how", "what", "why", "which", "when", "the", "hoe", "wat", "come", "cosa", "miten", "mitä", "wie", "was",
+              "comment", "quel", "quels", "quelle", "hur", "vad", "jak", "como"}
 
 
 def forbidden_term_hits(text, cfg):
@@ -397,6 +421,42 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
             if not any(w in txt for w in words_ok):
                 rep.add("Login wording", "FAIL", path_url,
                         f"login page {label} has no login word ({', '.join(cfg['login_words'].get(lang, ['login'])[:2])}): \"{txt[:70]}\"")
+
+    # 12e. Content structure: steps written as paragraphs, too few lists/tables, slogan headings
+    main_el = soup.find("main") or soup.body
+    if main_el:
+        seq = sorted(set(SEQ_WORDS.get(lang, []) + SEQ_WORDS["en"]))
+        para_steps = 0
+        for p_el in main_el.find_all("p"):
+            pl = p_el.get_text(" ", strip=True).lower()
+            if sum(len(re.findall(r"(?<!\w)" + re.escape(w) + r"(?!\w)", pl)) for w in seq) >= 3:
+                para_steps += 1
+        if para_steps:
+            rep.add("Content structure", "FAIL", path_url, f"{para_steps} paragraph(s) read as steps (3+ sequence words); write them as numbered lists")
+        n_blocks = len(main_el.find_all(["ul", "ol", "table"]))
+        mwc = word_count(main_text(soup))
+        per = 1000 if page_type == "mandatory" else 600
+        if mwc > per and n_blocks < mwc // per:
+            rep.add("Content structure", "FAIL", path_url,
+                    f"{n_blocks} list/table block(s) for {mwc} words; need at least {mwc // per}: steps, criteria and comparisons belong in lists or tables")
+        groups, parent = {}, ""
+        for h in main_el.find_all(["h2", "h3"]):
+            t = h.get_text(" ", strip=True)
+            if h.name == "h2":
+                parent = t
+            fw = re.sub(r"[^\w]", "", t.split()[0].lower()) if t.split() else ""
+            if fw and len(fw) > 2 and fw not in STOP_FIRST:
+                groups.setdefault((h.name, parent if h.name == "h3" else "", fw), []).append(t)
+            if any(re.search(f_, t, re.I) for f_ in FLUFF_HEADINGS):
+                rep.add("Content structure", "FAIL", path_url, f"brand-slogan heading, not a search topic: \"{t[:60]}\"")
+        for (lvl, _, fw), hs in groups.items():
+            if len(hs) >= 3:
+                rep.add("Content structure", "FAIL", path_url,
+                        f"templated slogan headings ({len(hs)} {lvl.upper()} start with '{fw}'): " + "; ".join(hs[:4]))
+
+    # 12d. Favicon
+    if not soup.find("link", rel=lambda r: r and any(x in ("icon", "shortcut") for x in (r.split() if isinstance(r, str) else r))):
+        rep.add("Favicon", "FAIL", path_url, "no <link rel=\"icon\"> in <head>")
 
     # 13. Schema: present, but no Review / AggregateRating
     blocks = soup.find_all("script", type="application/ld+json")
@@ -651,7 +711,7 @@ def mirror_site(base_url, max_pages=200, extra_paths=None):
 # Output
 # --------------------------------------------------------------------------
 CHECK_GROUPS = [
-    ("Structure", ["Single H1", "Heading hierarchy", "Word count", "Interlinking", "Mandatory pages"]),
+    ("Structure", ["Single H1", "Heading hierarchy", "Word count", "Content structure", "Interlinking", "Mandatory pages"]),
     ("Meta & Indexing", ["Meta title", "Meta description", "Meta description 18+", "Canonical",
                           "OG / Twitter tags", "Hreflang", "Robots meta", "Duplicate meta title",
                           "Duplicate meta description", "Sitemap", "Robots.txt", "Worker meta override"]),
@@ -660,7 +720,7 @@ CHECK_GROUPS = [
     ("Voice & AI signals", ["No em dashes", "No 2nd person (\"you\")", "AI phrase", "Brand voice", "Forbidden terms", "Licence number", "Login wording",
                              "Forbidden name", "Placeholders / dev notes"]),
     ("Compliance & Assets", ["Schema", "Images WebP", "Image alt", "Visual breaks", "18+ badge in footer",
-                              "18+ disclosure on home", "No age gate popup"]),
+                              "18+ disclosure on home", "No age gate popup", "Favicon"]),
 ]
 
 

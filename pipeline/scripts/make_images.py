@@ -4,6 +4,9 @@
 Usage:
   python3 make_images.py <project> --prompts   # print the ChatGPT prompts still to generate
   python3 make_images.py <project> --slots     # list the slot ids per built page (section ids)
+  python3 make_images.py <project> --favicon <image>   # favicon.ico, favicon-32.png, apple-touch-icon.png
+      from the brand's square icon (logo mark, app icon or the original site's favicon), PNG or WebP,
+      at least 180x180; transparent background is kept for the .ico and 32px PNG
   python3 make_images.py <project>             # convert raw files, write images.json, list what is missing
 
 design/image_plan.json:
@@ -43,10 +46,28 @@ def cover(im, w, h):
 
 def main():
     proj = sys.argv[1]
-    plan = json.load(open(os.path.join(proj, PLAN), encoding="utf-8"))
+    pp = os.path.join(proj, PLAN)
+    plan = json.load(open(pp, encoding="utf-8")) if os.path.exists(pp) else {"items": []}
     style = plan.get("style", "").strip()
     items = plan["items"]
     dz = os.path.join(proj, "design")
+
+    if "--favicon" in sys.argv:
+        src = sys.argv[sys.argv.index("--favicon") + 1]
+        im = Image.open(src).convert("RGBA")
+        side = min(im.size)
+        im = im.crop(((im.width - side) // 2, (im.height - side) // 2, (im.width + side) // 2, (im.height + side) // 2))
+        if side < 180:
+            print(f"WARNING: icon source is {side}px; use 180px or more for a sharp apple-touch-icon")
+        a_dir = os.path.join(dz, "assets")
+        os.makedirs(a_dir, exist_ok=True)
+        im.save(os.path.join(a_dir, "favicon.ico"), sizes=[(16, 16), (32, 32), (48, 48)])
+        im.resize((32, 32), Image.LANCZOS).save(os.path.join(a_dir, "favicon-32.png"))
+        bg = Image.new("RGBA", (180, 180), tuple(int(plan.get("icon_bg", "#000000").lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)) + (255,))
+        bg.alpha_composite(im.resize((180, 180), Image.LANCZOS))
+        bg.convert("RGB").save(os.path.join(a_dir, "apple-touch-icon.png"))
+        print("favicon.ico, favicon-32.png, apple-touch-icon.png written to design/assets/")
+        return
 
     if "--slots" in sys.argv:
         import glob, re

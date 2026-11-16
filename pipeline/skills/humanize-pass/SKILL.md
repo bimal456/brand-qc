@@ -11,7 +11,7 @@ Goal: the same page, reading like an experienced person wrote it. Runs on `conte
 The check script is in the private repo `bimal456/brand-qc` (folder `pipeline/`). Attach it with add_repo (owner `bimal456`, repo `brand-qc`) and clone it.
 
 ## Hard limits (all passes)
-- Do not change headings, their order or their level, the front-matter, facts, numbers, links or `[VERIFY]` placeholders.
+- Do not change headings, their order or their level, lists, numbered steps or tables (their wording may be tightened), the front-matter, facts, numbers, links or `[VERIFY]` placeholders.
 - Do not add new claims. Every concrete detail added must already be supported by site.json facts or the existing text.
 - Keep the site.json voice rules (no "you" unless allowed, brand first person, no em dashes).
 - Word count stays within 5% of the original.
@@ -23,7 +23,8 @@ Remove or rewrite:
 - stock phrases ("in today's", "it's important to note", "whether you're", "navigating", "seamless", "in conclusion" and their equivalents in the page's language)
 - sentences that restate the heading, empty openers and empty closers of a section
 - triplets of adjectives, every paragraph ending in a summary line, the same sentence shape repeated
-- hedging stacks ("can often typically"), and lists that should be one sentence
+- hedging stacks ("can often typically")
+- Never turn a list, numbered steps or a table into paragraphs, and never add or rename headings. A 2-item list may become one sentence; anything with 3 or more items, steps or comparable values stays a list or table.
 
 ## Pass 2: human signals
 - Vary rhythm: mix short sentences with longer ones; break any run of similar sentences.
@@ -35,7 +36,7 @@ Remove or rewrite:
 ## Pass 3: search and extraction
 - Each section starts with a one or two sentence direct answer to its heading.
 - Keyword and close variants appear naturally in the intro and in some H2 sections; never forced, never stuffed.
-- Comparable data (amounts, limits, times) sits in a short table or list so search engines and AI answers can extract it.
+- Comparable data (amounts, limits, times) sits in a short table or list so search engines and AI answers can extract it. A paragraph that walks through steps (first, then, next, finally) becomes a numbered list.
 - FAQ answers start with the answer, then one line of detail.
 - Skip a table when its values would be `[VERIFY]` placeholders.
 

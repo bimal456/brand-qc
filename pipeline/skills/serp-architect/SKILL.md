@@ -32,7 +32,9 @@ Read `consensus.md` and write `brief/<geo>/<page>/outline.md`:
 - **Intent and format**: what type of page ranks (review, listicle, guide) and what our page must be.
 - **Meta**: title pattern and description angle, based on the ranking titles.
 - **H1** and **intro brief**: how the top 3 open (length, first claim, numbers up front).
-- **Sections**: H2/H3 tree in order. Each section has its intent in one line, 2-5 points to cover, and a target word count. Consensus topics (used by half the competitors or more) are mandatory. Add 1-3 single-competitor topics as information gain when they fit.
+- **Sections**: H2/H3 tree in order. Each section has its intent in one line, 2-5 points to cover, a target word count, its source in brackets (consensus, PAA, related search, or the competitor heading it comes from) and a `format:` on the heading line: `steps` (a process: sign-up, deposit, withdrawal, claiming a bonus), `table` (amounts, limits, methods, times, comparisons), `list` (features, criteria, pros and cons) or `paragraphs` (explanation). Example: `2. **H2: How to sign up** - 300 words, format: steps (consensus 5/7)`. Match the competitors: if they show a section as steps or a table, ours is too. Most pages need several non-paragraph sections.
+- Every heading answers something people search for (a consensus topic, a PAA or related question, a competitor heading). No brand-slogan or philosophy headings ("What Fast Means at X", "Our approach", "Our DNA") and no runs of H3s built on one word ("Fast to Find / Fast to Understand / Fast to Get Help"); content_check fails them.
+- Consensus topics (used by half the competitors or more) are mandatory. Add 1-3 single-competitor topics as information gain when they fit.
 - **Entities**: terms, products and facts the page must mention (only facts that are verified in site.json).
 - **FAQ**: questions from "people also ask"; if there are none, from related searches and competitor FAQ headings. In the geo's language.
 - **Total words**: the top-5 competitor median, but never below the site.json criteria for that page type.
