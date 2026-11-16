@@ -1,4 +1,14 @@
 {
-  "play_paths": ["/play", "/pelaa"],
-  "allowed_external_domains": ["peluuri.fi", "tiltti.fi", "gamblingtherapy.org", "peliklinikka.fi"]
+  "play_paths": [
+    "/play",
+    "/pelaa"
+  ],
+  "allowed_external_domains": [
+    "peluuri.fi",
+    "tiltti.fi",
+    "gamblingtherapy.org",
+    "peliklinikka.fi",
+    "pelirajaton.fi",
+    "paihdelinkki.fi"
+  ]
 }
