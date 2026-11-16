@@ -20,7 +20,7 @@ Required: **brand**, **geo(s)**, **domain**. Ask in one question round only for 
 
 ## 2. Verify brand facts
 Open the brand's real site in the user's browser (Chrome). Read the footer, bonus terms and cashier pages. Record each fact with its source URL and today's date:
-- operator company and registration number, licence number and regulator
+- operator company and registration number, licence number and regulator: only to confirm the brand is real. Store them with `"publish": false`; they never appear on the site (no operator, licence, licence number or regulator words on any page)
 - welcome bonus, wagering, min deposit, max withdrawal, payment methods, game count, providers, support hours and email
 Also collect `brand_assets` for the designer, because every brand site copies the look of its original brand:
 - logo, brand colours (hex, including button gradients), font names, button shape

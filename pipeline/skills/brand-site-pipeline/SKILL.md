@@ -48,7 +48,7 @@ Mandatory pages (responsible gambling, terms, privacy, about, contact) need no S
 When the user is not there to answer, finish the work up to the gate, send what is ready, and stop. Do not pass a gate on the user's behalf.
 
 ## 4. Step 6 loop
-1. Rebuild: `python3 /tmp/brand-qc/pipeline/scripts/build.py <project>` (plus `--draft` only for previews).
+1. Rebuild: `python3 /tmp/brand-qc/pipeline/scripts/seo_build.py <project>` (hreflang and head tags for every page, also new ones), then `python3 /tmp/brand-qc/pipeline/scripts/build.py <project>` (plus `--draft` only for previews).
 2. Run `python3 /tmp/brand-qc/pipeline/scripts/qc_route.py <project>`. It runs Brand QC on `build/` with `qc/config.json` and writes `qc/requests/content.md`, `design.md`, `seo.md`, `intake.md` and `qc/route.md`.
    - Exit 0: nothing for owners. If `route.md` lists pages not built yet, go back to Step 2 for those pages; otherwise deliver.
    - Exit 1: start one agent per requests file (content to `content-writer`, design to `site-designer`, seo to `seo-optimizer`, intake to `brand-intake`) with "apply qc/requests/<owner>.md, mark each row done or refused: reason". Content changes also go through `content_check.py`; if a heading changed, rerun `seo_check.py`. Then rebuild and rerun `qc_route.py`.
@@ -64,4 +64,4 @@ Whenever you stop (at a gate, waiting for the user, or at the end), zip the proj
 2. Final report in the user's language: pages per geo with word counts, Brand QC verdict, refused requests and why, everything the user still has to supply (affiliate link, facts, og image, logo files).
 
 ## Rules that apply to every agent
-Brand speaks as "we / our / <brand>", the reader is never addressed as "you" unless `site.json` allows it, no em dashes, no other operators or brands named, external links only to the geo's responsible-gambling resources, every CTA and external link nofollow, play and login CTAs go to `/play`, no agency name anywhere on the site, no 18+ popup (18+ badge in the footer only), clean URLs without `.html` or a trailing slash.
+Brand speaks as "we / our / <brand>", the reader is never addressed as "you" unless `site.json` allows it, no em dashes, no other operators or brands named, external links only to the geo's responsible-gambling resources, every CTA and external link nofollow, play and login CTAs go to `/play`, no agency name anywhere on the site, no 18+ popup (18+ badge in the footer only), no operator, licence, licence number or regulator words anywhere (regulators only as help resources on the responsible-gambling page), no "glance" / "at a glance", the login page says Login (or the geo's login word) and never "Access Account", hreflang on every page, clean URLs without `.html` or a trailing slash.

@@ -25,7 +25,14 @@ const CFG = {
   },
   banned: ["in conclusion", "it's important to note", "navigating the", "dive into", "the ultimate guide", "look no further", "yhteenvetona", "on tärkeää huomata"],
   placeholders: ["lorem ipsum", "todo", "placeholder", "[brand]", "kap digital"],
-  voice: ["we are not the operator", "information only", "official site", "emme ole operaattori", "virallinen sivusto"]
+  voice: ["we are not the operator", "information only", "official site", "emme ole operaattori", "virallinen sivusto"],
+  // same lists as brand_qc.py DEFAULT_CONFIG (forbidden_terms, licence_number_patterns, regulator_names, login_*)
+  forbiddenTerms: {"operator": ["operator", "operated by", "operatore", "operatori", "gestito da", "operaattori", "ylläpitäjä", "exploitant", "beheerd door", "betreiber", "betrieben von", "opérateur", "exploité par", "operatör", "drivs av", "operador", "operado por"], "licence": ["licen", "lisens", "lizenz", "vergunning", "concessione"], "glance": ["glance", "colpo d'occhio", "silmäyksellä", "oogopslag", "auf einen blick", "coup d'œil", "coup d'oeil", "ögonkast", "rzut oka"]},
+  licenceNumbers: ["\\bMGA/[A-Z0-9]+/\\d+/\\d{4}\\b", "\\bB2C/\\d+/\\d{4}\\b", "\\bOGL/\\d{4}-\\d+", "\\b\\d{3,5}/JAZ\\b", "\\bGLH-[A-Z0-9-]{4,}", "\\bALSI-\\d{5,}", "\\bC\\d{5}\\b", "\\b(?:no|nr|n|number|numero|nummer|num\u00e9ro|numer)\\.?\\s*:?\\s*[A-Z]{1,5}[/-]\\d[\\dA-Z/-]{3,}"],
+  regulators: ["malta gaming authority", "mga", "curaçao", "curacao", "gaming curacao", "gaming control board", "kahnawake", "anjouan", "agenzia delle dogane", "adm", "gambling commission", "ukgc", "kansspelautoriteit", "ksa", "spelinspektionen", "gemeinsame glücksspielbehörde", "ggl", "autorité nationale des jeux", "anj", "poliisihallitus", "lotteriinspektionen"],
+  loginWords: {"en": ["login", "log in", "sign in"], "it": ["accedi", "accesso", "login"], "fi": ["kirjaudu", "kirjautuminen", "kirjautumi"], "nl": ["inloggen", "login"], "de": ["anmelden", "anmeldung", "login"], "fr": ["connexion", "se connecter"], "sv": ["logga in", "inloggning"], "pl": ["zaloguj", "logowanie"], "pt": ["login", "entrar"], "el": ["σύνδεση"], "es": ["iniciar sesión", "acceder", "login"]},
+  loginSlugWords: ["login", "log-in", "sign-in", "kirjau", "accedi", "accesso", "inloggen", "anmelden", "connexion", "logga-in", "inloggning", "zaloguj", "logowanie", "entrar"],
+  loginBad: ["access account", "access your account", "account access", "access the account", "accedi al conto", "accesso al conto", "accedi all'account", "accesso all'account", "accesso account", "pääsy tilille", "toegang tot account", "kontozugang", "accès au compte", "åtkomst till konto"]
 };
 
 const origin = location.origin;
@@ -107,6 +114,25 @@ for (const p of pages) {
   CFG.banned.forEach(b => { if (low.includes(b)) R.push("AI phrase: " + b); });
   CFG.placeholders.forEach(b => { if (low.includes(b)) F.push("placeholder/forbidden: " + b); });
   CFG.voice.forEach(b => { if (low.includes(b)) F.push("voice: " + b); });
+  { // forbidden terms, licence numbers, regulators, login wording
+    const scan = (vis + " " + title + " " + desc + " " + [...d.querySelectorAll("img")].map(i => i.alt).join(" "));
+    const sl = scan.toLowerCase(), esc = x => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    Object.entries(CFG.forbiddenTerms).forEach(([g, ts]) => {
+      const hits = [...new Set(ts.flatMap(t => [...sl.matchAll(new RegExp("(?<![\\p{L}\\p{N}_])" + esc(t.toLowerCase()) + "[\\p{L}\\p{N}_']*", "gu"))].map(m => m[0])))];
+      if (hits.length) F.push(`${g} word: ${hits.slice(0, 4).join(", ")}`);
+    });
+    const nums = [];
+    CFG.licenceNumbers.forEach(pt => { for (const m of scan.matchAll(new RegExp(pt.replace(/\\b/g, "\\b"), /no\|nr/.test(pt) ? "gi" : "g"))) if (!nums.some(n => n.includes(m[0]) || m[0].includes(n))) nums.push(m[0]); });
+    if (nums.length) F.push("licence no: " + nums.slice(0, 4).join(", "));
+    const regs = CFG.regulators.filter(r => new RegExp("(?<![\\p{L}])" + esc(r) + "(?![\\p{L}])", "u").test(sl));
+    if (regs.length) (tp === "mandatory" ? R : F).push("regulator: " + regs.slice(0, 4).join(", "));
+    CFG.loginBad.forEach(b => { if (sl.includes(b)) F.push(`login wording "${b}"`); });
+    if (CFG.loginSlugWords.some(w => p.toLowerCase().includes(w))) {
+      const ok = (CFG.loginWords[lang] || []).concat(CFG.loginWords.en), h1t = (d.querySelector("h1")?.textContent || "").toLowerCase();
+      if (!ok.some(w => h1t.includes(w))) F.push("login H1 without login word");
+      if (!ok.some(w => title.toLowerCase().includes(w))) F.push("login title without login word");
+    }
+  }
   const ld = [...d.querySelectorAll('script[type="application/ld+json"]')].map(s => s.textContent).join(" ");
   if (!ld) R.push("no schema");
   if (/"(Review|AggregateRating)"|aggregateRating/.test(ld)) F.push("review schema");

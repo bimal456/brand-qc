@@ -29,3 +29,7 @@ Scripts are in the private repo `bimal456/brand-qc` (folder `pipeline/`). Attach
 
 ## QC requests
 QC sends head-tag, schema, hreflang, sitemap and robots fixes in `qc/requests/seo.md`. Fix them in `site.json` SEO fields or by rerunning `seo_build.py` (fix the script in the repo when the bug is in it), rebuild, and mark each row `done` or `refused: <reason>`.
+
+## Always
+- Every page gets hreflang (self + x-default, plus the other geos): run `seo_build.py` after every content change and before every build. `build.py` refuses a final build when a page has no SEO head file or no hreflang.
+- Schema never carries licence, operator or regulator data (no `credentialCategory`, no legalName of the operator).

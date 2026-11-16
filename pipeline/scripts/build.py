@@ -178,7 +178,11 @@ def main():
 
     def tpl(name):
         p = os.path.join(tdir, name + ".html")
-        return open(p, encoding="utf-8").read() if os.path.exists(p) else ""
+        t = open(p, encoding="utf-8").read() if os.path.exists(p) else ""
+        if name == "base" and t and "{{head_extra}}" not in t:
+            # the SEO head (hreflang, og, schema, robots) must always reach the page
+            t = re.sub(r"</head>", "{{head_extra}}\n</head>", t, count=1, flags=re.I)
+        return t
 
     play = site.get("play_path", "/play")
     host = site["domain"]
@@ -194,6 +198,7 @@ def main():
             shutil.copy(os.path.join(seo_files, f), build)
 
     problems, built, skipped = [], [], set()
+    no_seo, no_hreflang = [], []
     for g in site["geos"]:
         geo = g["code"]
         cdir = os.path.join(proj, "content", geo)
@@ -303,6 +308,8 @@ def main():
             for part in ("header", "sidebar", "footer"):
                 ctx[part] = fill(tpl(part), ctx).replace(here + ">", here + ' aria-current="page">')
             head_extra_p = os.path.join(proj, "seo", "head", geo, f"{name}.html")
+            if not os.path.exists(head_extra_p):
+                no_seo.append(f"{geo}/{name}")
             ctx.update({
                 "title": E(meta.get("title", "")), "description": E(meta.get("description", ""), quote=True),
                 "canonical": f"https://{host}{url_for(g['prefix'], meta.get('slug', '/'))}",
@@ -310,17 +317,28 @@ def main():
             })
             out = os.path.join(build, out_path(g["prefix"], meta.get("slug", "/")))
             os.makedirs(os.path.dirname(out), exist_ok=True)
-            open(out, "w", encoding="utf-8").write(fill(tpl("base"), ctx))
+            page_html = fill(tpl("base"), ctx)
+            if 'hreflang="' not in page_html:
+                no_hreflang.append(out_path(g["prefix"], meta.get("slug", "/")))
+            open(out, "w", encoding="utf-8").write(page_html)
             built.append(out_path(g["prefix"], meta.get("slug", "/")))
 
     print("Built:", ", ".join(built))
     if skipped:
         print("Skipped (no template or data):", ", ".join(sorted(skipped)))
+    blocked = False
+    if no_seo:
+        print("No SEO head (hreflang, og, schema) for:", ", ".join(no_seo), "-> run seo_build.py <project> first")
+        blocked = True
+    if no_hreflang:
+        print("Pages built WITHOUT hreflang:", ", ".join(no_hreflang))
+        blocked = True
     if problems:
         print("Open placeholders:", "; ".join(problems))
-        if not draft:
-            print("Build blocked: resolve [VERIFY] placeholders or use --draft for a preview.")
-            sys.exit(1)
+        blocked = True
+    if blocked and not draft:
+        print("Build blocked: fix the items above (or use --draft for a preview).")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

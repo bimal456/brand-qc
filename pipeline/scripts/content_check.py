@@ -56,6 +56,10 @@ DEV_NOTES = [
 ]
 
 
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")))
+from brand_qc import DEFAULT_CONFIG as QC, forbidden_term_hits  # noqa: E402  shared word lists
+
+
 def load(path):
     raw = open(path, encoding="utf-8").read()
     m = re.match(r"\s*<!--meta\s+(\{.*?\})\s*-->", raw, re.S)
@@ -134,6 +138,32 @@ def main():
     for nm in ["kap digital"] + [n.lower() for n in site.get("avoid_names", [])]:
         if nm and nm in low:
             F.append(f"forbidden name: '{nm}'")
+
+    # 5b forbidden terms (operator, licence, glance ...), licence numbers, regulators, login wording.
+    # Lists live in brand_qc.py DEFAULT_CONFIG so Step 3 and Step 6 check the same words.
+    scan = " ".join([body, t, d, meta.get("h1", ""), meta.get("nav_label", "")])
+    for group, hits in forbidden_term_hits(scan, QC).items():
+        F.append(f"forbidden {group} word(s): " + ", ".join(f"'{h}'" for h in hits[:5])
+                 + " (remove the sentence or rewrite it without the word; no operator or licence talk)")
+    nums = []
+    for pat in QC["licence_number_patterns"]:
+        for m in re.finditer(pat, scan, re.I if "no|nr" in pat else 0):
+            if not any(m.group(0) in n or n in m.group(0) for n in nums):
+                nums.append(m.group(0))
+    if nums:
+        F.append("licence/registration number(s): " + ", ".join(nums[:6]))
+    regs = [r for r in QC["regulator_names"] if re.search(r"(?<!\w)" + re.escape(r) + r"(?!\w)", scan.lower())]
+    if regs:
+        (R if meta.get("type") == "mandatory" else F).append(
+            "regulator named: " + ", ".join(regs[:5]) + " (only as a help resource on the responsible-gambling page)")
+    for ph in QC["login_bad_phrases"]:
+        if ph in scan.lower():
+            F.append(f"'{ph}' used; write the normal login word ({', '.join(QC['login_words'].get(lang, ['login'])[:2])})")
+    if any(w in meta.get("slug", "").lower() for w in QC["login_slug_words"]):
+        ok = QC["login_words"].get(lang, []) + QC["login_words"]["en"]
+        for label, txt in (("h1", meta.get("h1", "")), ("title", t)):
+            if not any(w in txt.lower() for w in ok):
+                F.append(f"login page {label} has no login word ({', '.join(QC['login_words'].get(lang, ['login'])[:2])}): '{txt[:60]}'")
 
     for dn in DEV_NOTES:
         if dn in low:

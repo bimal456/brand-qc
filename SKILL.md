@@ -31,7 +31,7 @@ One site per report. Write the reply in the user's language (Hinglish if they wr
 
 Before reporting, sanity-check findings the script cannot judge:
 - Links counted as "CTA not to play" that are really in-page table-of-contents links.
-- Licence or operator claims (schema `credentialCategory: license`, licence numbers, operator names): look up the number and say whether it belongs to the named operator. Never confirm a claim you could not verify.
+- Operator, licence, licence-number, regulator and "glance" words are FAIL on every page (the script lists them under Forbidden terms and Licence number). The fix is always to remove them, not to verify them. A regulator named on the responsible-gambling page as a help resource is fine. The login page must say Login (or the geo's login word), never "Access Account".
 - Second-person counts in languages where the verb form carries "you" (Finnish voit/saat, etc.): treat as real.
 
 The script does not judge entity coverage, vague claims, bonus/T&C accuracy or templated section patterns. Mention these as a separate manual/AI check if the user asks for a full audit.

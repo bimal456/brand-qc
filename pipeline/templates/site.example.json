@@ -1,6 +1,9 @@
 {
   "brand": "Munkki Casino",
-  "brand_aliases": ["Munkki Kasino", "Munkki"],
+  "brand_aliases": [
+    "Munkki Kasino",
+    "Munkki"
+  ],
   "avoid_names": [],
   "domain": "munkkicasinoo.com",
   "site_type": "brand",
@@ -8,7 +11,14 @@
   "play_path": "/play",
   "affiliate_link": "PLACEHOLDER - keep /play redirect",
   "geos": [
-    {"code": "fi", "prefix": "/", "hreflang": "fi-FI", "html_lang": "fi", "location_name": "Finland", "language_code": "fi"}
+    {
+      "code": "fi",
+      "prefix": "/",
+      "hreflang": "fi-FI",
+      "html_lang": "fi",
+      "location_name": "Finland",
+      "language_code": "fi"
+    }
   ],
   "voice": {
     "brand_person": "first person (we / our / Munkki Casino)",
@@ -17,7 +27,11 @@
     "notes": ""
   },
   "criteria": {
-    "word_count": {"home": 5000, "other": 3000, "mandatory": 1000},
+    "word_count": {
+      "home": 5000,
+      "other": 3000,
+      "mandatory": 1000
+    },
     "allow_noindex": false,
     "external_links": "geo responsible-gambling resources only",
     "other_brands_named": false,
@@ -25,14 +39,62 @@
     "extra_rules": []
   },
   "pages": [
-    {"slug": "/", "type": "home", "keywords": {"fi": "munkki casino"}},
-    {"slug": "/bonus", "type": "other", "keywords": {"fi": "munkki kasino bonus"}},
-    {"slug": "/kirjautuminen", "type": "other", "keywords": {"fi": "munkki kasino kirjautuminen"}},
-    {"slug": "/vastuullinen-pelaaminen", "type": "mandatory", "keywords": {"fi": ""}},
-    {"slug": "/kayttoehdot", "type": "mandatory", "keywords": {"fi": ""}},
-    {"slug": "/tietosuojakaytanto", "type": "mandatory", "keywords": {"fi": ""}},
-    {"slug": "/tietoa-meista", "type": "mandatory", "keywords": {"fi": ""}},
-    {"slug": "/ota-yhteytta", "type": "mandatory", "keywords": {"fi": ""}}
+    {
+      "slug": "/",
+      "type": "home",
+      "keywords": {
+        "fi": "munkki casino"
+      }
+    },
+    {
+      "slug": "/bonus",
+      "type": "other",
+      "keywords": {
+        "fi": "munkki kasino bonus"
+      }
+    },
+    {
+      "slug": "/kirjautuminen",
+      "type": "other",
+      "keywords": {
+        "fi": "munkki kasino kirjautuminen"
+      }
+    },
+    {
+      "slug": "/vastuullinen-pelaaminen",
+      "type": "mandatory",
+      "keywords": {
+        "fi": ""
+      }
+    },
+    {
+      "slug": "/kayttoehdot",
+      "type": "mandatory",
+      "keywords": {
+        "fi": ""
+      }
+    },
+    {
+      "slug": "/tietosuojakaytanto",
+      "type": "mandatory",
+      "keywords": {
+        "fi": ""
+      }
+    },
+    {
+      "slug": "/tietoa-meista",
+      "type": "mandatory",
+      "keywords": {
+        "fi": ""
+      }
+    },
+    {
+      "slug": "/ota-yhteytta",
+      "type": "mandatory",
+      "keywords": {
+        "fi": ""
+      }
+    }
   ],
   "brand_assets": {
     "logo": "",
@@ -42,8 +104,22 @@
     "source": "brand site / user supplied"
   },
   "facts": [
-    {"claim": "Operator: White Hat Gaming Limited (Malta, reg. C73232)", "source": "https://www.munkkikasino.com/fi-fi/pelintarjoajat", "checked": "2026-11-12"},
-    {"claim": "Licence: MGA/B2C/370/2017", "source": "", "checked": ""},
-    {"claim": "Welcome bonus: 125% up to 600 EUR, wagering 40x (d+b), min deposit 20 EUR", "source": "", "checked": ""}
+    {
+      "claim": "Operator: White Hat Gaming Limited (Malta, reg. C73232)",
+      "source": "https://www.munkkikasino.com/fi-fi/pelintarjoajat",
+      "checked": "2026-11-12",
+      "publish": false
+    },
+    {
+      "claim": "Licence: MGA/B2C/370/2017",
+      "source": "",
+      "checked": "",
+      "publish": false
+    },
+    {
+      "claim": "Welcome bonus: 125% up to 600 EUR, wagering 40x (d+b), min deposit 20 EUR",
+      "source": "",
+      "checked": ""
+    }
   ]
 }

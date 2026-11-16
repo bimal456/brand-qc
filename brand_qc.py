@@ -44,6 +44,42 @@ DEFAULT_CONFIG = {
     "forbidden_names": ["KAP Digital", "KAP "],
     "forbidden_voice": ["we are not the operator", "information only", "informational site only",
                          "official site", "not affiliated with", "this site is not"],
+    # Words that must never appear on a brand site (FAIL). Matched case-insensitively from the start
+    # of a word, so a stem also catches its inflections (licen -> license, licence, licenza, licentie).
+    "forbidden_terms": {
+        "operator": ["operator", "operated by", "operatore", "operatori", "gestito da", "operaattori",
+                     "ylläpitäjä", "exploitant", "beheerd door", "betreiber", "betrieben von",
+                     "opérateur", "exploité par", "operatör", "drivs av", "operador", "operado por"],
+        "licence": ["licen", "lisens", "lizenz", "vergunning", "concessione"],
+        "glance": ["glance", "colpo d'occhio", "silmäyksellä", "oogopslag", "auf einen blick",
+                   "coup d'œil", "coup d'oeil", "ögonkast", "rzut oka"],
+    },
+    # Licence / company registration numbers (FAIL)
+    "licence_number_patterns": [
+        r"\bMGA/[A-Z0-9]+/\d+/\d{4}\b", r"\bB2C/\d+/\d{4}\b", r"\bOGL/\d{4}-\d+",
+        r"\b\d{3,5}/JAZ\b", r"\bGLH-[A-Z0-9-]{4,}", r"\bALSI-\d{5,}", r"\bC\d{5}\b",
+        r"\b(?:no|nr|n|number|numero|nummer|numéro|numer)\.?\s*:?\s*[A-Z]{1,5}[/-]\d[\dA-Z/-]{3,}",
+    ],
+    # Regulator names: fine on a responsible-gambling page as a help resource, otherwise a licence claim (REVIEW)
+    "regulator_names": ["malta gaming authority", "mga", "curaçao", "curacao", "gaming curacao",
+                        "gaming control board", "kahnawake", "anjouan", "agenzia delle dogane", "adm",
+                        "gambling commission", "ukgc", "kansspelautoriteit", "ksa", "spelinspektionen",
+                        "gemeinsame glücksspielbehörde", "ggl", "autorité nationale des jeux", "anj",
+                        "poliisihallitus", "lotteriinspektionen"],
+    # Login page: H1 and title use the geo's normal login word; these phrases are wrong (FAIL)
+    "login_words": {
+        "en": ["login", "log in", "sign in"], "it": ["accedi", "accesso", "login"],
+        "fi": ["kirjaudu", "kirjautuminen", "kirjautumi"], "nl": ["inloggen", "login"],
+        "de": ["anmelden", "anmeldung", "login"], "fr": ["connexion", "se connecter"],
+        "sv": ["logga in", "inloggning"], "pl": ["zaloguj", "logowanie"], "pt": ["login", "entrar"],
+        "el": ["σύνδεση"], "es": ["iniciar sesión", "acceder", "login"],
+    },
+    "login_slug_words": ["login", "log-in", "sign-in", "kirjau", "accedi", "accesso", "inloggen",
+                         "anmelden", "connexion", "logga-in", "inloggning", "zaloguj", "logowanie", "entrar"],
+    "login_bad_phrases": ["access account", "access your account", "account access", "access the account",
+                          "accedi al conto", "accesso al conto", "accedi all'account", "accesso all'account",
+                          "accesso account", "pääsy tilille", "toegang tot account", "kontozugang",
+                          "accès au compte", "åtkomst till konto"],
     "banned_phrases": [
         "in conclusion", "it's important to note", "it is important to note",
         "navigating the", "in today's digital", "in the ever-evolving", "ever-changing landscape",
@@ -134,6 +170,19 @@ def word_count(text):
 def line_of(raw, needle):
     idx = raw.lower().find(needle.lower())
     return raw.count("\n", 0, idx) + 1 if idx >= 0 else None
+
+
+def forbidden_term_hits(text, cfg):
+    """{group: [matched words]} for cfg['forbidden_terms'], matched from the start of a word."""
+    low, out = text.lower(), {}
+    for group, terms in cfg.get("forbidden_terms", {}).items():
+        hits = []
+        for t in terms:
+            for m in re.finditer(r"(?<![\w])" + re.escape(t.lower()) + r"[\w']*", low):
+                hits.append(text[m.start():m.end()])
+        if hits:
+            out[group] = sorted(set(hits), key=hits.index)
+    return out
 
 
 def snippet(text, needle, width=60):
@@ -313,6 +362,41 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
     for ph in cfg["forbidden_voice"]:
         if ph in vis_low:
             rep.add("Brand voice", "FAIL", path_url, f"\"{ph}\" -> {snippet(vis, ph)}")
+
+    # 12b. Forbidden terms (operator, licence, glance ...), licence numbers, regulator names
+    desc_tag = soup.find("meta", attrs={"name": "description"})
+    alts = " ".join(i.get("alt", "") for i in soup.find_all("img"))
+    scan = " ".join([vis, title, desc_tag.get("content", "") if desc_tag else "", alts])
+    for group, hits in forbidden_term_hits(scan, cfg).items():
+        rep.add("Forbidden terms", "FAIL", path_url,
+                f"{group}: " + "; ".join(f"\"{w}\" -> {snippet(scan, w)}" for w in hits[:3])
+                + (f" (+{len(hits) - 3} more)" if len(hits) > 3 else ""))
+    nums = []
+    for pat in cfg["licence_number_patterns"]:
+        for m in re.finditer(pat, scan, re.I if "no|nr" in pat else 0):
+            if not any(m.group(0) in n or n in m.group(0) for n in nums):
+                nums.append(m.group(0))
+    if nums:
+        rep.add("Licence number", "FAIL", path_url, "licence/registration number(s): " + ", ".join(nums[:6])
+                + f" -> {snippet(scan, nums[0])}")
+    regs = [r for r in cfg["regulator_names"] if re.search(r"(?<!\w)" + re.escape(r) + r"(?!\w)", scan.lower())]
+    if regs:
+        rep.add("Licence number", "REVIEW" if page_type == "mandatory" else "FAIL", path_url,
+                "regulator named (licence claim unless it is a help resource on the responsible-gambling page): "
+                + ", ".join(regs[:5]))
+
+    # 12c. Login page wording: H1 and title carry the geo's login word, never "access account"
+    path_low = urlparse(path_url).path.lower() if "://" in path_url else path_url.lower()
+    for ph in cfg["login_bad_phrases"]:
+        if ph in scan.lower():
+            rep.add("Login wording", "FAIL", path_url, f"\"{ph}\" -> {snippet(scan, ph)}; use the normal login word")
+    if any(w in path_low for w in cfg["login_slug_words"]):
+        words_ok = cfg["login_words"].get(lang, []) + cfg["login_words"]["en"]
+        h1t = soup.find("h1").get_text(" ", strip=True).lower() if soup.find("h1") else ""
+        for label, txt in (("H1", h1t), ("title", title.lower())):
+            if not any(w in txt for w in words_ok):
+                rep.add("Login wording", "FAIL", path_url,
+                        f"login page {label} has no login word ({', '.join(cfg['login_words'].get(lang, ['login'])[:2])}): \"{txt[:70]}\"")
 
     # 13. Schema: present, but no Review / AggregateRating
     blocks = soup.find_all("script", type="application/ld+json")
@@ -573,7 +657,7 @@ CHECK_GROUPS = [
                           "Duplicate meta description", "Sitemap", "Robots.txt", "Worker meta override"]),
     ("Links & CTAs", ["No # in href", "Links", "Nofollow external", "Nofollow CTA", "External link allowlist",
                        "Clean URLs", "Broken internal link", "Login/Register CTA -> /play"]),
-    ("Voice & AI signals", ["No em dashes", "No 2nd person (\"you\")", "AI phrase", "Brand voice",
+    ("Voice & AI signals", ["No em dashes", "No 2nd person (\"you\")", "AI phrase", "Brand voice", "Forbidden terms", "Licence number", "Login wording",
                              "Forbidden name", "Placeholders / dev notes"]),
     ("Compliance & Assets", ["Schema", "Images WebP", "Image alt", "Visual breaks", "18+ badge in footer",
                               "18+ disclosure on home", "No age gate popup"]),

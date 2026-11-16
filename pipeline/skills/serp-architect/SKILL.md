@@ -36,6 +36,7 @@ Read `consensus.md` and write `brief/<geo>/<page>/outline.md`:
 - **Entities**: terms, products and facts the page must mention (only facts that are verified in site.json).
 - **FAQ**: questions from "people also ask"; if there are none, from related searches and competitor FAQ headings. In the geo's language.
 - **Total words**: the top-5 competitor median, but never below the site.json criteria for that page type.
+No section, heading or entity about the operator, licence, licence number or regulator, even when competitors have one: turn it into security and fair play (encryption, verification, limits, support). No "at a glance" headings (write "in brief" style headings in the geo's language instead). The login page's H1 and title use the geo's login word with the brand ("BetPanda Login", "Accedi a BetPanda"), never "Access Account".
 Headings, meta examples and CTA examples follow site.json voice rules (no "you" or imperatives unless allowed). Never copy a competitor heading word for word.
 
 ## 4. Approval gate

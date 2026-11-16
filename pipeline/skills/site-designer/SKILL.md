@@ -26,6 +26,7 @@ Scripts and the design starter are in the private repo `bimal456/brand-qc` (fold
    - `assets/css/site.css`: change the variables at the top (colours, gradients, fonts, radius, shadows) and the component styles until the screenshots look like the original. One file, mobile first.
    - `templates/`: base, header, sidebar (empty it if the original has none), footer and `blocks/`. Play-path links are always `rel="nofollow sponsored"`. Footer carries the pages list, the geo's responsible-gambling links, the 18+ badge and the legal line.
    - Header nav: follow the original brand's header unless `site.json` `criteria.header_page_links` is false; then the header carries only the logo plus Login/Register and page links move to the sidebar or footer. The current page's link carries `aria-current="page"`; style it.
+   - Labels and the footer legal line never mention an operator, licence or regulator. The login label is the geo's normal login word (Login, Accedi, Kirjaudu), never "Access Account".
    - `theme.json`: brand name, logo token (inline SVG or `<img>` with width and height), labels per geo (any extra label key becomes a template token), `toc` on or off.
 2. Images: follow section 2b. No images of real people.
 3. Rules from the user:
