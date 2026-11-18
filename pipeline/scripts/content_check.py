@@ -61,6 +61,22 @@ def norm_h(t):
     return re.sub(r"[^\w ]", "", re.sub(r"\s+", " ", t.lower())).strip()
 
 
+def page_keyword(path, meta):
+    """keyword of this page and geo from <project>/site.json (content/<geo>/<page>.md)"""
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(path))))
+    sp = os.path.join(root, "site.json")
+    if not os.path.exists(sp):
+        return ""
+    site = json.load(open(sp, encoding="utf-8"))
+    geo, slug = meta.get("geo", ""), meta.get("slug", "")
+    for pg in site.get("pages", []):
+        pslug = (pg.get("slugs") or {}).get(geo, pg.get("slug", ""))
+        if pslug.strip("/") == slug.strip("/"):
+            k = (pg.get("keywords") or {}).get(geo, "")
+            return k if isinstance(k, str) else (k[0] if k else "")
+    return ""
+
+
 def section_texts(body):
     """[(heading, text until the next heading of any level)]"""
     parts = re.split(r"^(#{2,6})\s+(.*)$", body, flags=re.M)
@@ -68,7 +84,8 @@ def section_texts(body):
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")))
-from brand_qc import DEFAULT_CONFIG as QC, forbidden_term_hits, SEQ_WORDS, FLUFF_HEADINGS, STOP_FIRST  # noqa: E402
+from brand_qc import (DEFAULT_CONFIG as QC, forbidden_term_hits, SEQ_WORDS, FLUFF_HEADINGS, STOP_FIRST,  # noqa: E402
+                      GENERIC_HEADINGS, PROS_CONS_RE, FAQ_HEAD_RE, FAQ_ANSWER_MAX, TABLE_LIMIT, H2_KEYWORD_SHARE)
 
 
 def load(path):
@@ -246,6 +263,43 @@ def main():
     for h, txt in heads:
         if any(re.search(p_, txt, re.I) for p_ in FLUFF_HEADINGS):
             F.append(f"brand-slogan heading, not a search topic: '{txt[:60]}'")
+        if any(re.search(g, txt.strip(), re.I) for g in GENERIC_HEADINGS):
+            F.append(f"generic heading, not a search topic: '{txt[:60]}' (use a heading people search for)")
+        if re.search(PROS_CONS_RE, txt, re.I):
+            F.append(f"pros/cons section not wanted: '{txt[:60]}'")
+    if re.search(r"^\s*(?:\*\*|__)?\s*" + PROS_CONS_RE + r"\s*:?\s*(?:\*\*|__)?\s*:?\s*$", body_np, re.I | re.M):
+        F.append("pros/cons block (a 'Pros' / 'Cons' label line); write the trade-off into normal sections instead")
+
+    # 6c tables: lists first, tables only for real numeric comparisons
+    n_tab = len(re.findall(r"(?:^\s*\|.*\n?)+", body_np, flags=re.M))
+    lim = TABLE_LIMIT.get(meta.get("type", ""), TABLE_LIMIT["default"])
+    if n_tab > lim:
+        F.append(f"{n_tab} tables (max {lim} on a {meta.get('type', 'default')} page); turn the rest into lists or prose")
+
+    # 6d FAQ answers stay short
+    if re.search(r"^##\s.*(?:" + FAQ_HEAD_RE + ")", body_np, re.I | re.M):
+        # questions are the H3s after the FAQ H2 (until the next H2), or bold question lines inside it
+        parts = re.split(r"^##\s", body_np, flags=re.M)
+        faq_body = next((x for x in parts if re.search(FAQ_HEAD_RE, x.split("\n", 1)[0], re.I)), "")
+        qa = re.split(r"^(?:###\s+(.+)|\*\*(.+\?)\*\*)\s*$", faq_body, flags=re.M)
+        long_ans = []
+        for i in range(1, len(qa) - 2, 3):
+            q = qa[i] or qa[i + 1]
+            n = len(re.findall(r"\w+", qa[i + 2] or ""))
+            if n > FAQ_ANSWER_MAX:
+                long_ans.append(f"'{q[:35]}' {n}w")
+        if long_ans:
+            F.append(f"{len(long_ans)} FAQ answer(s) over {FAQ_ANSWER_MAX} words (answer first, 30-50 words): " + "; ".join(long_ans[:3]))
+
+    # 6e SEO subheadings: H2s carry the page keyword, a keyword stem or the brand
+    kw = meta.get("keyword") or page_keyword(a.content, meta)
+    if kw:
+        stems = {w[:5] for w in re.findall(r"\w+", kw.lower()) if len(w) > 2}
+        h2s = [txt for h, txt in heads if len(h) == 2 and not re.search(FAQ_HEAD_RE, txt, re.I)]
+        with_kw = [t for t in h2s if any(st in t.lower() for st in stems)]
+        if h2s and len(with_kw) / len(h2s) < H2_KEYWORD_SHARE:
+            F.append(f"only {len(with_kw)}/{len(h2s)} H2s carry the keyword '{kw}' or a variant (need {int(H2_KEYWORD_SHARE * 100)}%+); "
+                     "make subheadings the searched phrases (PAA, related searches, competitor headings)")
 
     # 7 numbers vs verified facts
     verified = " ".join(f["claim"] for f in site.get("facts", []) if f.get("source"))

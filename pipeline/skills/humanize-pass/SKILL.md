@@ -36,8 +36,8 @@ Remove or rewrite:
 ## Pass 3: search and extraction
 - Each section starts with a one or two sentence direct answer to its heading.
 - Keyword and close variants appear naturally in the intro and in some H2 sections; never forced, never stuffed.
-- Comparable data (amounts, limits, times) sits in a short table or list so search engines and AI answers can extract it. A paragraph that walks through steps (first, then, next, finally) becomes a numbered list.
-- FAQ answers start with the answer, then one line of detail.
+- Comparable data (amounts, limits, times) sits in a short list, or a table when real numbers sit side by side, so search engines and AI answers can extract it. Never add a table beyond the page limit (2, home 3, mandatory 1) and never add a pros/cons block. A paragraph that walks through steps (first, then, next, finally) becomes a numbered list.
+- FAQ answers start with the answer, then one line of detail: 30-50 words, never over 60.
 - Skip a table when its values would be `[VERIFY]` placeholders.
 
 ## Check and hand off

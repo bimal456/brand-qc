@@ -196,6 +196,24 @@ FLUFF_HEADINGS = [r"^what .{1,30} means", r"\bour (approach|philosophy|promise|m
                   r"^wat .{1,30} betekent", r"^cosa significa", r"^mitä .{1,30} tarkoittaa", r"^was .{1,30} bedeutet",
                   r"^ce que .{1,30} signifie", r"^vad .{1,30} betyder", r"\bonze (aanpak|filosofie|belofte)\b",
                   r"\bla nostra (filosofia|promessa)\b", r"\bunsere (philosophie|mission)\b"]
+# generic headings that rank for nothing (exact heading, any language)
+GENERIC_HEADINGS = [r"^(overview|introduction|intro|conclusion|summary|final thoughts|final words|our verdict|verdict|"
+                    r"key takeaways|takeaways|in brief|in short|wrap-up|bottom line|the bottom line|"
+                    r"yhteenveto|johdanto|lopuksi|conclusione|riepilogo|panoramica|in sintesi|introduzione|"
+                    r"conclusie|samenvatting|overzicht|inleiding|tot slot|fazit|zusammenfassung|überblick|einleitung|"
+                    r"résumé|aperçu|en bref|sammanfattning|slutsats|översikt|podsumowanie|wnioski|resumo|conclusão|"
+                    r"συμπέρασμα|σύνοψη)\W*$"]
+# pros and cons sections are not wanted on brand sites (heading or bold label, any language)
+PROS_CONS_RE = (r"(?<!\w)(pros|cons|pros and cons|advantages and disadvantages|plussat|miinukset|hyvät ja huonot puolet|"
+                r"voordelen|nadelen|voor- en nadelen|pro e contro|vantaggi|svantaggi|vorteile|nachteile|vor- und nachteile|"
+                r"avantages|inconvénients|fördelar|nackdelar|zalety|wady|prós|contras|πλεονεκτήματα|μειονεκτήματα)(?!\w)")
+FAQ_HEAD_RE = (r"faq|usein kysyt|frequently asked|vanliga fr[aå]gor|veelgestelde|h[aä]ufig gestellte|questions fr[eé]quentes|"
+               r"domande frequenti|preguntas frecuentes|cz[eę]sto zadawane|ofte stilte|συχν[εέ]ς ερωτ")
+FAQ_ANSWER_MAX = 60      # words per FAQ answer (FAIL above)
+TABLE_LIMIT = {"home": 3, "mandatory": 1, "default": 2}   # tables per page (FAIL above)
+H2_KEYWORD_SHARE = 0.4   # at least this share of H2s (FAQ excluded) carry the page keyword, brand or a keyword stem
+
+
 STOP_FIRST = {"how", "what", "why", "which", "when", "the", "hoe", "wat", "come", "cosa", "miten", "mitä", "wie", "was",
               "comment", "quel", "quels", "quelle", "hur", "vad", "jak", "como"}
 
@@ -471,6 +489,44 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
             if len(hs) >= 3:
                 rep.add("Content structure", "FAIL", path_url,
                         f"templated slogan headings ({len(hs)} {lvl.upper()} start with '{fw}'): " + "; ".join(hs[:4]))
+
+    # 12f. Pros/cons, generic headings, FAQ answer length, table count
+    if main_el:
+        for h in main_el.find_all(["h2", "h3", "h4"]):
+            t = h.get_text(" ", strip=True)
+            if re.search(PROS_CONS_RE, t, re.I):
+                rep.add("Content structure", "FAIL", path_url, f"pros/cons section not wanted: \"{t[:60]}\"")
+            if any(re.search(g, t.strip(), re.I) for g in GENERIC_HEADINGS):
+                rep.add("Content structure", "FAIL", path_url, f"generic heading, not a search topic: \"{t[:60]}\"")
+        for lab in main_el.find_all(["strong", "b", "dt", "th"]):
+            lt = lab.get_text(" ", strip=True)
+            if len(lt) < 30 and re.fullmatch(r"\W*" + PROS_CONS_RE + r"\W*", lt, re.I):
+                rep.add("Content structure", "FAIL", path_url, f"pros/cons block (label \"{lt}\")")
+                break
+        n_tab = len(main_el.find_all("table"))
+        lim = TABLE_LIMIT.get(page_type, TABLE_LIMIT["default"])
+        if n_tab > lim:
+            rep.add("Content structure", "FAIL", path_url, f"{n_tab} tables (max {lim} on a {page_type} page); turn the rest into lists or prose")
+        faq_h2 = next((h for h in main_el.find_all("h2") if re.search(FAQ_HEAD_RE, h.get_text(" ", strip=True), re.I)), None)
+        if faq_h2:
+            long_ans = []
+            q = None
+            words = 0
+            for el in faq_h2.find_all_next():
+                if el.name == "h2":
+                    break
+                if el.name in ("h3", "h4", "summary", "dt"):
+                    if q and words > FAQ_ANSWER_MAX:
+                        long_ans.append((q, words))
+                    q, words = el.get_text(" ", strip=True), 0
+                elif el.name in ("p", "li", "dd") and q:
+                    words += word_count(el.get_text(" ", strip=True))
+            if q and words > FAQ_ANSWER_MAX:
+                long_ans.append((q, words))
+            if long_ans:
+                rep.add("Content structure", "FAIL", path_url,
+                        f"{len(long_ans)} FAQ answer(s) over {FAQ_ANSWER_MAX} words: "
+                        + "; ".join(f"\"{qq[:35]}\" {w}w" for qq, w in long_ans[:3]))
 
     # 12d. Favicon
     if not soup.find("link", rel=lambda r: r and any(x in ("icon", "shortcut") for x in (r.split() if isinstance(r, str) else r))):
