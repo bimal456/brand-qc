@@ -20,7 +20,7 @@ Use the Agent tool, one agent per job. The prompt names:
 - the exact scope (which pages and geos, or which requests file);
 - "Do not change files you do not own. End with the self-check output and a list of anything you could not do."
 
-Step agents do not start agents of their own: you already split the work. Never give one agent several steps.
+Step agents do not start agents of their own: you already split the work. Never give one agent several steps (the one exception: the content writer runs the humanize pass on its own page).
 
 ### Token budget (every agent starts cold, so fewer, fuller agents cost less)
 - **Batch pages:** Step 2 = one `serp-architect` agent per 3 pages (it runs them one after another). All mandatory pages of a geo = one agent for their outlines and one agent for their content (no SERP calls). Step 3 = one `content-writer` agent per main page; the same agent runs the humanize pass on its own page at the end (no separate humanize agent).
@@ -62,7 +62,7 @@ When the user is not there to answer, finish the work up to the gate, send what 
    - Exit 1: start one agent per requests file (content to `content-writer`, design to `site-designer`, seo to `seo-optimizer`, intake to `brand-intake`) with "apply qc/requests/<owner>.md, mark each row done or refused: reason". Content changes also go through `content_check.py`; if a heading changed, rerun `seo_check.py`. Then rebuild and rerun `qc_route.py`.
    - A round counts only when rows go to owners; `qc/round.txt` holds it.
    - Exit 3: two fix rounds are used up. Show the user the open rows and refused requests and let them decide.
-3. After the script passes, run the brand-qc skill's manual checks (licence claims, TOC links counted as CTAs, entity coverage, templated sections) yourself and route anything found the same way.
+3. After the script passes, run the brand-qc skill's manual checks (TOC links counted as CTAs, entity coverage, templated sections) yourself and route anything found the same way.
 
 ## 5. Save progress
 Whenever you stop (at a gate, waiting for the user, or at the end), zip the project (`project-<domain>.zip`, without `build/assets` images if over 50 MB) and send it to the user with SendUserFile, so the next chat can continue from it.
