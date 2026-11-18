@@ -28,7 +28,7 @@ Step agents do not start agents of their own: you already split the work. Never 
 - **Edit, never rewrite:** every fix (self-check, humanize, SEO or QC requests) is a targeted Edit of the lines concerned. Never rewrite or re-read a whole content file to change a few lines; after an edit rerun the check script and read only its FAIL/REVIEW lines.
 - **Short returns:** each agent returns at most 5 lines (pages done, words, check result, open items). Do not paste file contents, SERP data or full reports into a reply or into a prompt; point to the file path.
 - **Screenshots:** look at two shots only (home at 1366 and 375, scaled), and others only when a check fails on that page.
-- Run independent agents in parallel, but no more than 4 at once.
+- Run independent agents in parallel, up to 6 at once.
 
 Shared files have one writer, you: `brief/APPROVAL.md` (page agents return their row and you merge it, keeping existing `approved` rows), `qc/requests/*` (written by `qc_route.py`) and the progress zip.
 
