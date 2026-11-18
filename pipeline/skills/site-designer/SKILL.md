@@ -61,7 +61,7 @@ A page must never turn into a wall of text: the lobby blocks at the top are not 
 
 ## 3. Self-check
 1. `python3 pipeline/scripts/design_check.py <project> --shots` must PASS (no FAIL: no overflow at 375 or 1366, no console errors, WebP images with alt, no `#` links, nofollow play links, 18+ and responsible-gambling links in the footer, one H1, no heading skips, no stretch of main content over 1800px without a visual, no upscaled image). Fix REVIEW notes about soft images (under 2x) and stretches over 1200px too. Other REVIEW notes about web fonts not loading in the sandbox or links to pages not built yet are fine.
-2. Open the screenshots in `design/shots/` (top part of each page at both widths) next to the original brand's screenshots and compare: colours, buttons, header and menu, game rows, spacing. Fix what does not match or looks broken, cramped or templated, then rebuild and recheck.
+2. Open only the home page shots (1366 and 375, scaled down) from `design/shots/`, plus the shots of a page whose check failed, (top part of each page at both widths) next to the original brand's screenshots and compare: colours, buttons, header and menu, game rows, spacing. Fix what does not match or looks broken, cramped or templated, then rebuild and recheck.
 
 ## 4. Hand off
 Report: the design choices in 3-5 lines (colours, fonts, layout), the image plan per page (how many visuals from each source, any still missing), whether they come from the original brand or are a placeholder, what still differs from the original, the check result, and the screenshot files. Step 5 (SEO) adds head tags and site files through `seo/`, and the build picks them up.

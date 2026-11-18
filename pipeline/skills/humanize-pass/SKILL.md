@@ -16,7 +16,7 @@ The check script is in the private repo `bimal456/brand-qc` (folder `pipeline/`)
 - Keep the site.json voice rules (no "you" unless allowed, brand first person, no em dashes).
 - Word count stays within 5% of the original.
 
-Run the three passes **one at a time**, each as a fresh read of the file. Do not combine them.
+Read the file **once**, note what to change for all three passes below, then apply the changes as targeted edits (Edit tool, a few lines at a time). Never rewrite the whole file and never re-read it in full between passes. Usually the content writer's own agent runs this pass at the end of its page.
 
 ## Pass 1: strip AI patterns
 Remove or rewrite:

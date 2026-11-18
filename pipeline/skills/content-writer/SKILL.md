@@ -35,10 +35,11 @@ Each page is written by its own sub-agent with only: site.json, that page's outl
 - **FAQ:** flat questions and answers unless site.json allows an accordion. Each answer 30-50 words, never over 60: the answer in the first sentence, then one line of detail. No lists or tables inside FAQ answers.
 
 ## 3. Self-check (before handing off)
+Fix with targeted edits (Edit tool), never by rewriting the whole file; after each round read only the script's FAIL/REVIEW lines.
 Run `python3 pipeline/scripts/content_check.py content/<geo>/<page>.md --outline brief/<geo>/<page>/outline.md`. Fix every FAIL and rerun until it passes. `[VERIFY]` placeholders do not count toward the word target, so write the real words around them. Leave REVIEW items you cannot fix (for example numbers waiting for verification) and list them in your summary.
 
 ## 4. Hand off
-Summary per page: words, H2 count, check result, open `[VERIFY]` placeholders. The humanize pass (`humanize-pass` skill) runs next on the same file.
+Then run the humanize pass (`pipeline/skills/humanize-pass/SKILL.md`) on the same file yourself, as targeted edits. Return at most 5 lines per page: words, H2 count, check result, open `[VERIFY]` placeholders.
 
 ## Change requests
 Requests arrive in `seo/requests.md` (SEO) or `qc/requests/content.md` (QC). When a request arrives (page, section, change, reason), apply it if it keeps the voice and fact rules; otherwise refuse and say why. Mark each row `done` or `refused: <reason>` in the requests file. When a request changes a heading, change the same heading in the outline so outline and page stay in step. Rerun the self-check after every change.

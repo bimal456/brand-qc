@@ -20,7 +20,15 @@ Use the Agent tool, one agent per job. The prompt names:
 - the exact scope (which pages and geos, or which requests file);
 - "Do not change files you do not own. End with the self-check output and a list of anything you could not do."
 
-Run independent jobs in parallel (one agent per page for Steps 2 and 3). Never give one agent several steps. Step agents do not start agents of their own: you already split the work.
+Step agents do not start agents of their own: you already split the work. Never give one agent several steps.
+
+### Token budget (every agent starts cold, so fewer, fuller agents cost less)
+- **Batch pages:** Step 2 = one `serp-architect` agent per 3 pages (it runs them one after another). All mandatory pages of a geo = one agent for their outlines and one agent for their content (no SERP calls). Step 3 = one `content-writer` agent per main page; the same agent runs the humanize pass on its own page at the end (no separate humanize agent).
+- **Model:** start SERP collection, mandatory pages, SEO and QC-fix agents with the Agent tool's `model: "sonnet"`; the content writer and the designer use the default model.
+- **Edit, never rewrite:** every fix (self-check, humanize, SEO or QC requests) is a targeted Edit of the lines concerned. Never rewrite or re-read a whole content file to change a few lines; after an edit rerun the check script and read only its FAIL/REVIEW lines.
+- **Short returns:** each agent returns at most 5 lines (pages done, words, check result, open items). Do not paste file contents, SERP data or full reports into a reply or into a prompt; point to the file path.
+- **Screenshots:** look at two shots only (home at 1366 and 375, scaled), and others only when a check fails on that page.
+- Run independent agents in parallel, but no more than 4 at once.
 
 Shared files have one writer, you: `brief/APPROVAL.md` (page agents return their row and you merge it, keeping existing `approved` rows), `qc/requests/*` (written by `qc_route.py`) and the progress zip.
 
@@ -29,8 +37,8 @@ Shared files have one writer, you: `brief/APPROVAL.md` (page agents return their
 | Step | Agents | Done when (you check, do not trust the report) |
 |---|---|---|
 | 1 Intake | 1 x `brand-intake` | `site.json` and `qc/config.json` exist; status shows intake complete |
-| 2 SERP | 1 x `serp-architect` per page and geo | `brief/<geo>/<page>/outline.md` for every page; `brief/APPROVAL.md` written |
-| 3 Content | 1 x `content-writer` per page, then 1 x `humanize-pass` per page | `content_check.py` has no FAIL for every page (`[VERIFY]` placeholders allowed until facts arrive) |
+| 2 SERP | 1 x `serp-architect` per 3 pages; 1 for all mandatory pages of a geo | `brief/<geo>/<page>/outline.md` for every page; `brief/APPROVAL.md` written |
+| 3 Content | 1 x `content-writer` per main page (it also runs the humanize pass); 1 for all mandatory pages of a geo | `content_check.py` has no FAIL for every page (`[VERIFY]` placeholders allowed until facts arrive) |
 | 4 Design | 1 x `site-designer` for the whole site | `build.py` runs; `design_check.py` has no FAIL |
 | 5 SEO | 1 x `seo-optimizer` | `seo_check.py` has 0 open requests (or round 2 done); `seo/files/` exists |
 | 6 QC | you run `qc_route.py` | `qc/route.md` ends with "Ready to deliver" (exit 0 with pending pages only means no defects in the built pages) |
