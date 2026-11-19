@@ -1,3 +1,25 @@
 {
-  "allowed_external_domains": ["joueurs-info-service.fr", "anj.fr", "sosjoueurs.org"]
+  "allowed_external_domains": [
+    "joueurs-info-service.fr",
+    "anj.fr",
+    "sosjoueurs.org"
+  ],
+  "mandatory_pages": {
+    "responsible gambling": [
+      "responsible",
+      "verantwoord",
+      "verantwortung",
+      "jeu-responsable",
+      "gioco-responsabile",
+      "ansvarsfullt",
+      "vastuullinen",
+      "odpowiedzialn",
+      "spelansvar",
+      "responsavel",
+      "ypefthyno",
+      "safer-gambling",
+      "rg",
+      "prevention"
+    ]
+  }
 }

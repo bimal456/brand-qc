@@ -25,6 +25,7 @@ Agar machine se site reach na ho (proxy / firewall), site ka homepage Chrome mei
 - `allowed_external_domains`: us geo ke responsible-gambling sites (inke alawa koi external link FAIL)
 - `word_count`: home / mandatory / other targets
 - `forbidden_names`, `banned_phrases`, `second_person`
+- `second_person_ignore`: per-language phrases skipped before the "you" count (e.g. French "rendez-vous", "donne le ton")
 
 Saari keys `configs/example-all-keys.json` aur script ke `DEFAULT_CONFIG` mein hain. Geo configs ke RG domains starting list hain, use karne se pehle ek baar check kar lena.
 
