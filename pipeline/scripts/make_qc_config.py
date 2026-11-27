@@ -32,10 +32,13 @@ def main():
         "_generated_from": os.path.abspath(path),
         "_site_type": site.get("site_type"),
         "word_count": crit.get("word_count", {"home": 5000, "other": 3000, "mandatory": 1000}),
-        "play_paths": sorted({site.get("play_path", "/play").rstrip("/") or "/play", "/play"}),
+        "play_paths": sorted({site.get("play_path", "/play").rstrip("/") or "/play", "/play", "/go", "/visit", "/out"}),
         "allowed_external_domains": allowed + crit.get("extra_allowed_domains", []),
         "forbidden_names": ["KAP Digital", "KAP "] + site.get("avoid_names", []),
     }
+    cfg["link_router"] = site.get("link_router", True)
+    cfg["licence_allowed"] = site.get("licence_allowed", True)
+    cfg["domain"] = site.get("domain", "")
     if site.get("voice", {}).get("address_reader_as_you"):
         # reader may be addressed as "you" on this site: switch the check off for every language
         cfg["second_person"] = {k: [] for k in ["en", "nl", "de", "fr", "it", "sv", "fi", "pl", "el", "pt"]}

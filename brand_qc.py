@@ -35,7 +35,8 @@ DEFAULT_CONFIG = {
     "meta_title": [55, 60],
     "meta_description": [150, 160],
     "length_tolerance": 5,          # outside range by <= this many chars = REVIEW, more = FAIL
-    "play_paths": ["/play"],          # affiliate redirect path(s); add "/pelaa" etc. per site
+    "play_paths": ["/play", "/go", "/visit", "/out"],  # answered by the link-router worker; add "/pelaa" etc. per site
+    "link_router": True,              # Cloudflare link-router worker: site must not answer /play, /go, /visit, /out itself
     # Register / sign-up links always go to the play path. Login words go to the play path only on
     # CTA buttons (class btn/button/cta, role=button, or inside a <button>); a plain menu, side-menu
     # or footer text link "Login" may open the site's own login page.
@@ -65,10 +66,15 @@ DEFAULT_CONFIG = {
         "glance": ["glance", "colpo d'occhio", "silmäyksellä", "oogopslag", "auf einen blick",
                    "coup d'œil", "coup d'oeil", "ögonkast", "rzut oka"],
     },
-    # Licence / company registration numbers (FAIL)
+    # Licence (Nov 2026): licence words, licence numbers and regulator names may appear, but only as the
+    # verified licence fact from site.json (content_check compares them). Set False to forbid licences again.
+    "licence_allowed": True,
+    # Company registration numbers belong to the operator: still FAIL
+    "company_number_patterns": [r"\bC\d{5}\b", r"\b(?:reg(?:istration)?\.?\s*(?:no|number|nr)\.?|company number)\s*:?\s*[A-Z]{0,3}\d{4,}"],
+    # Licence numbers: REVIEW while licence_allowed (must match the verified fact), FAIL otherwise
     "licence_number_patterns": [
         r"\bMGA/[A-Z0-9]+/\d+/\d{4}\b", r"\bB2C/\d+/\d{4}\b", r"\bOGL/\d{4}-\d+",
-        r"\b\d{3,5}/JAZ\b", r"\bGLH-[A-Z0-9-]{4,}", r"\bALSI-\d{5,}", r"\bC\d{5}\b",
+        r"\b\d{3,5}/JAZ\b", r"\bGLH-[A-Z0-9-]{4,}", r"\bALSI-\d{5,}",
         r"\b(?:no|nr|n|number|numero|nummer|numéro|numer)\.?\s*:?\s*[A-Z]{1,5}[/-]\d[\dA-Z/-]{3,}",
     ],
     # Regulator names: fine on a responsible-gambling page as a help resource, otherwise a licence claim (REVIEW)
@@ -238,6 +244,8 @@ def forbidden_term_hits(text, cfg):
     """{group: [matched words]} for cfg['forbidden_terms'], matched from the start of a word."""
     low, out = text.lower(), {}
     for group, terms in cfg.get("forbidden_terms", {}).items():
+        if group == "licence" and cfg.get("licence_allowed", True):
+            continue
         hits = []
         for t in terms:
             for m in re.finditer(r"(?<![\w])" + re.escape(t.lower()) + r"[\w']*", low):
@@ -442,10 +450,17 @@ def check_page(path_url, raw, soup, cfg, rep, site_files, page_type, internal_ho
             if not any(m.group(0) in n or n in m.group(0) for n in nums):
                 nums.append(m.group(0))
     if nums:
-        rep.add("Licence number", "FAIL", path_url, "licence/registration number(s): " + ", ".join(nums[:6])
-                + f" -> {snippet(scan, nums[0])}")
+        lic_ok = cfg.get("licence_allowed", True)
+        rep.add("Licence number", "REVIEW" if lic_ok else "FAIL", path_url,
+                ("licence number shown, must match the verified licence fact in site.json: " if lic_ok
+                 else "licence number(s): ") + ", ".join(nums[:6]) + f" -> {snippet(scan, nums[0])}")
+    for pat in cfg.get("company_number_patterns", []):
+        m = re.search(pat, scan, re.I)
+        if m:
+            rep.add("Licence number", "FAIL", path_url, f"company registration number (operator detail): \"{m.group(0)}\"")
+            break
     regs = [r for r in cfg["regulator_names"] if re.search(r"(?<!\w)" + re.escape(r) + r"(?!\w)", scan.lower())]
-    if regs:
+    if regs and not cfg.get("licence_allowed", True):
         rep.add("Licence number", "REVIEW" if page_type == "mandatory" else "FAIL", path_url,
                 "regulator named (licence claim unless it is a help resource on the responsible-gambling page): "
                 + ", ".join(regs[:5]))
@@ -687,6 +702,19 @@ def run(site_dir, cfg):
         if d and len(ups) > 1:
             rep.add("Duplicate meta description", "FAIL", ", ".join(ups), d[:80])
 
+    # worker-ready (same rules as the cleanup skill): the link router answers /play, /go, /visit, /out
+    if cfg.get("link_router", True):
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pipeline", "scripts"))
+        try:
+            import worker_ready
+            wr = worker_ready.run(site_dir, cfg.get("domain", ""), fix=False)
+            for prob in wr["problems"]:
+                rep.add("Worker ready", "FAIL", "site", prob)
+            for pg, n in list(wr["cta_pages"].items())[:10]:
+                rep.add("Worker ready", "FAIL", pg, f"{n} CTA link(s) with an affiliate URL; point them at /play")
+        except ImportError:
+            pass
+
     # sitemap / robots
     sm = os.path.join(site_dir, "sitemap.xml")
     if not os.path.exists(sm):
@@ -798,7 +826,7 @@ CHECK_GROUPS = [
                        "Clean URLs", "Broken internal link", "Login/Register CTA -> /play"]),
     ("Voice & AI signals", ["No em dashes", "No 2nd person (\"you\")", "AI phrase", "Brand voice", "Forbidden terms", "Licence number", "Login wording",
                              "Forbidden name", "Placeholders / dev notes"]),
-    ("Compliance & Assets", ["Schema", "Images WebP", "Image alt", "Visual breaks", "18+ badge in footer",
+    ("Compliance & Assets", ["Worker ready", "Schema", "Images WebP", "Image alt", "Visual breaks", "18+ badge in footer",
                               "18+ disclosure on home", "No age gate popup", "Favicon"]),
 ]
 

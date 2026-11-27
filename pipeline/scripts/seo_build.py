@@ -11,12 +11,15 @@ Reads site.json and content/<geo>/<page>.md front-matter. Writes:
                               FAQPage when the page has an FAQ section). Never Review/AggregateRating.
   seo/files/robots.txt        Disallow play path, Sitemap line
   seo/files/sitemap.xml       clean URLs with xhtml:link alternates
-  seo/files/_redirects        Cloudflare: play path -> affiliate link (302), .html and trailing slash -> clean URL (301)
+  seo/files/_redirects        Cloudflare: .html and trailing slash -> clean URL (301). With link_router false
+                              also play path -> affiliate link (302); with the link router (default) the
+                              separate worker answers /play, /go, /visit and /out, so no line for them
   seo/files/_headers          Cloudflare: HSTS, nosniff, referrer, frame; noindex on play path; asset caching
   seo/files/.htaccess         cPanel/Apache: https + non-www, clean URLs, play redirect, noindex play path
 
 site.json keys used: domain, brand, geos[], pages[] (slug or slugs{geo}, type), play_path,
-affiliate_link, indexing ("index" default | "noindex"), www (false default).
+link_router (true default: Cloudflare link-router worker handles /play, /go, /visit, /out),
+affiliate_link (only used when link_router is false), indexing ("index" default | "noindex"), www (false default).
 The og image is /assets/img/og.jpg when design/assets/img/og.jpg exists (1200x630, made by the designer).
 """
 import html
@@ -166,11 +169,13 @@ def main():
         sm.append("  </url>")
     sm.append("</urlset>")
     open(os.path.join(files, "sitemap.xml"), "w").write("\n".join(sm) + "\n")
+    router = site.get("link_router", True)
     aff = site.get("affiliate_link", "")
     if not aff.startswith("http"):
         aff = "https://example.invalid/set-affiliate-link"
+    play_lines = "" if router else f"{play}  {aff}  302\n{play}/  {aff}  302\n"
     open(os.path.join(files, "_redirects"), "w").write(
-        f"{play}  {aff}  302\n{play}/  {aff}  302\n/index.html  /  301\n/:page.html  /:page  301\n")
+        play_lines + "/index.html  /  301\n/:page.html  /:page  301\n")
     open(os.path.join(files, "_headers"), "w").write(
         "/*\n  Strict-Transport-Security: max-age=31536000; includeSubDomains\n  X-Content-Type-Options: nosniff\n"
         "  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: SAMEORIGIN\n"
@@ -183,9 +188,7 @@ RewriteEngine On
 RewriteCond %{{HTTPS}} off [OR]
 RewriteCond %{{HTTP_HOST}} !^{re.escape(canon_host)}$ [NC]
 RewriteRule ^(.*)$ https://{canon_host}/$1 [R=301,L]
-# affiliate redirect
-RewriteRule ^{play.strip('/')}/?$ {aff} [R=302,L]
-# /page.html and /page/ -> /page
+{"" if router else f"# affiliate redirect{chr(10)}RewriteRule ^{play.strip('/')}/?$ {aff} [R=302,L]{chr(10)}"}# /page.html and /page/ -> /page
 RewriteCond %{{THE_REQUEST}} \\s/([^.?\\s]+)\\.html[\\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 RewriteCond %{{REQUEST_FILENAME}} !-d
@@ -204,7 +207,8 @@ ErrorDocument 404 /404.html
 </IfModule>
 """)
     print(f"SEO layer: {len(sitemap_urls)} page(s), files: robots.txt, sitemap.xml, _redirects, _headers, .htaccess"
-          + ("" if site.get("affiliate_link", "").startswith("http") else " | WARNING: site.json affiliate_link not set"))
+          + (" | link router: /play, /go, /visit, /out are answered by the worker" if router else
+             ("" if aff.startswith("https://example") is False else " | WARNING: site.json affiliate_link not set")))
 
 
 if __name__ == "__main__":

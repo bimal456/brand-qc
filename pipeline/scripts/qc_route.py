@@ -31,7 +31,7 @@ OWNER = {
     # templates, css, images, build.py output
     "Single H1": "design", "Heading hierarchy": "design", "No # in href": "design",
     "Login/Register CTA -> /play": "design", "Nofollow CTA": "design", "Nofollow external": "design",
-    "Images WebP": "design", "Image alt": "design", "Visual breaks": "design", "Favicon": "design", "18+ badge in footer": "design",
+    "Images WebP": "design", "Image alt": "design", "Visual breaks": "design", "Favicon": "design", "Worker ready": "design", "18+ badge in footer": "design",
     "No age gate popup": "design",
     # head tags, schema, files
     "Canonical": "seo", "Hreflang": "seo", "Sitemap": "seo", "Robots.txt": "seo",

@@ -33,4 +33,4 @@ QC sends head-tag, schema, hreflang, sitemap and robots fixes in `qc/requests/se
 ## Always
 - Every page gets hreflang (self + x-default, plus the other geos): run `seo_build.py` after every content change and before every build. `build.py` refuses a final build when a page has no SEO head file or no hreflang.
 - `sitemap.xml` and `robots.txt` come from `seo_build.py` and must list every built page; `build.py` refuses a final build when they are missing or a page is not in the sitemap. A single-file HTML preview has no sitemap: check the ZIP or the live site.
-- Schema never carries licence, operator or regulator data (no `credentialCategory`, no legalName of the operator).
+- Schema never carries operator data (no legalName of the operator company) and no licence claim (`credentialCategory`); the licence lives in the page text only.

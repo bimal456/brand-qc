@@ -61,6 +61,13 @@ def norm_h(t):
     return re.sub(r"[^\w ]", "", re.sub(r"\s+", " ", t.lower())).strip()
 
 
+def site_facts(path):
+    """facts[] from <project>/site.json (content/<geo>/<page>.md)"""
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(path))))
+    sp = os.path.join(root, "site.json")
+    return json.load(open(sp, encoding="utf-8")).get("facts", []) if os.path.exists(sp) else []
+
+
 def page_keyword(path, meta):
     """keyword of this page and geo from <project>/site.json (content/<geo>/<page>.md)"""
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(path))))
@@ -178,20 +185,32 @@ def main():
         for m in re.finditer(pat, scan, re.I if "no|nr" in pat else 0):
             if not any(m.group(0) in n or n in m.group(0) for n in nums):
                 nums.append(m.group(0))
-    if nums:
-        F.append("licence/registration number(s): " + ", ".join(nums[:6]))
+    # licence: allowed, but only as the verified licence fact in site.json (has a source, not publish:false)
+    lic_facts = " ".join(f.get("claim", "") for f in site_facts(a.content)
+                         if f.get("source") and f.get("publish", True) is not False).lower()
+    unverified = [n for n in nums if n.lower() not in lic_facts]
+    if unverified:
+        F.append("licence number(s) not in a verified site.json fact (with source): " + ", ".join(unverified[:4])
+                 + " (use the verified number word for word, or remove it)")
+    for pat in QC["company_number_patterns"]:
+        m = re.search(pat, scan, re.I)
+        if m:
+            F.append(f"company registration number (operator detail): '{m.group(0)}'")
+            break
     regs = [r for r in QC["regulator_names"] if re.search(r"(?<!\w)" + re.escape(r) + r"(?!\w)", scan.lower())]
-    if regs:
+    bad_regs = [r for r in regs if not re.search(r"(?<!\w)" + re.escape(r) + r"(?!\w)", lic_facts)]
+    if bad_regs:
         (R if meta.get("type") == "mandatory" else F).append(
-            "regulator named: " + ", ".join(regs[:5]) + " (only as a help resource on the responsible-gambling page)")
+            "regulator named without a verified licence fact in site.json: " + ", ".join(bad_regs[:5])
+            + " (fine as a help resource on the responsible-gambling page)")
     for ph in QC["login_bad_phrases"]:
         if ph in scan.lower():
-            F.append(f"'{ph}' used; write the normal login word ({', '.join(QC['logiwc'].get(lang, ['login'])[:2])})")
+            F.append(f"'{ph}' used; write the normal login word ({', '.join(QC['login_words'].get(lang, ['login'])[:2])})")
     if any(w in meta.get("slug", "").lower() for w in QC["login_slug_words"]):
-        ok = QC["logiwc"].get(lang, []) + QC["logiwc"]["en"]
+        ok = QC["login_words"].get(lang, []) + QC["login_words"]["en"]
         for label, txt in (("h1", meta.get("h1", "")), ("title", t)):
             if not any(w in txt.lower() for w in ok):
-                F.append(f"login page {label} has no login word ({', '.join(QC['logiwc'].get(lang, ['login'])[:2])}): '{txt[:60]}'")
+                F.append(f"login page {label} has no login word ({', '.join(QC['login_words'].get(lang, ['login'])[:2])}): '{txt[:60]}'")
 
     for dn in DEV_NOTES:
         if dn in low:

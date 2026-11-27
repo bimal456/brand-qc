@@ -113,13 +113,13 @@
     {
       "claim": "Licence: MGA/B2C/370/2017",
       "source": "",
-      "checked": "",
-      "publish": false
+      "checked": ""
     },
     {
       "claim": "Welcome bonus: 125% up to 600 EUR, wagering 40x (d+b), min deposit 20 EUR",
       "source": "",
       "checked": ""
     }
-  ]
+  ],
+  "link_router": true
 }

@@ -36,4 +36,4 @@ Saari keys `configs/example-all-keys.json` aur script ke `DEFAULT_CONFIG` mein h
 - Compliance & assets: no review/rating schema, WebP images, alt text, 18+ in footer, 18+ on home, age-gate markup
 
 ## Not covered (manual / AI check)
-Entity density, topical coverage vs brief, vague claims, licence-claim verification, bonus/T&C accuracy, templated section patterns.
+Entity density, topical coverage vs brief, vague claims, licence-number match against the verified site.json fact, bonus/T&C accuracy, templated section patterns.

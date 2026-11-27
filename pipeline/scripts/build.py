@@ -340,6 +340,25 @@ def main():
     if skipped:
         print("Skipped (no template or data):", ", ".join(sorted(skipped)))
     blocked = False
+    # worker-ready output (same rules as the cleanup skill): the link router answers /play, /go, /visit, /out
+    if site.get("link_router", True):
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import worker_ready
+        wr = worker_ready.run(build, site.get("domain", ""), site.get("play_path", "/play"), fix=True)
+        msg = []
+        if wr["removed"]:
+            msg.append("removed " + ", ".join(wr["removed"]))
+        if wr["redirect_lines_removed"]:
+            msg.append(f"{len(wr['redirect_lines_removed'])} _redirects line(s) for worker paths removed")
+        if wr["cta_links_rewritten"]:
+            msg.append(f"{len(wr['cta_links_rewritten'])} affiliate CTA link(s) pointed at /play: "
+                       + ", ".join(sorted(set(wr["cta_links_rewritten"]))[:3]))
+        print("Worker-ready:", "; ".join(msg) if msg else "nothing to change")
+        if wr["external_hosts_kept"]:
+            print("External links kept (not CTAs):", ", ".join(f"{h} x{c}" for h, c in wr["external_hosts_kept"].items()))
+        if wr["problems"]:
+            print("Worker-ready problems:", "; ".join(wr["problems"]))
+            blocked = True
     if not fav_tags:
         print("No favicon: run make_images.py <project> --favicon <logo or icon image>")
         blocked = True
